@@ -18,6 +18,9 @@ using Microsoft.AspNetCore.Authorization;
 
 using UserApi.Models;
 using ProjectApi.Models;
+using TeamApi.Models;
+using CompanyApi.Models;
+using ResourceTypeApi.Models;
 
 namespace TimeTracker_server
 {
@@ -40,6 +43,16 @@ namespace TimeTracker_server
 
       services.AddDbContext<ProjectContext>(options =>
       options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
+      services.AddDbContext<TeamContext>(options =>
+      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
+      services.AddDbContext<CompanyContext>(options =>
+      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
+      services.AddDbContext<ResourceTypeContext>(options =>
+      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
       services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
       services.AddCors();
@@ -49,7 +62,7 @@ namespace TimeTracker_server
         var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
         config.Filters.Add(new AuthorizeFilter(policy));
       });
-      
+
       services.AddSwaggerGen(c =>
       {
         c.SwaggerDoc("v1", new OpenApiInfo { Title = "TimeTracker_server", Version = "v1" });
