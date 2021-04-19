@@ -40,7 +40,7 @@ namespace TimeTracker_server
 
       services.AddDbContext<ProjectContext>(options =>
       options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-      services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+      services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
       services.AddCors();
 
