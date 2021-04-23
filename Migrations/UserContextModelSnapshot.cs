@@ -44,8 +44,8 @@ namespace TimeTracker_server.Migrations
                     b.Property<string>("password")
                         .HasColumnType("text");
 
-                    b.Property<int>("status")
-                        .HasColumnType("integer");
+                    b.Property<string>("status")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");

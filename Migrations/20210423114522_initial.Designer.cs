@@ -10,7 +10,7 @@ using UserApi.Models;
 namespace TimeTracker_server.Migrations
 {
     [DbContext(typeof(UserContext))]
-    [Migration("20210331032521_initial")]
+    [Migration("20210423114522_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
