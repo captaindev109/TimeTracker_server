@@ -7,7 +7,7 @@ namespace ResourceTypeApi.Models
     public ResourceTypeContext(DbContextOptions<ResourceTypeContext> options) : base(options)
     {
     }
-    public DbSet<ResourceType> Projects { get; set; }
+    public DbSet<ResourceType> ResourceTypes { get; set; }
 
   }
 }

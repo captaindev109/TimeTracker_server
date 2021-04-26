@@ -7,7 +7,7 @@ namespace TeamApi.Models
     public TeamContext(DbContextOptions<TeamContext> options) : base(options)
     {
     }
-    public DbSet<Team> Projects { get; set; }
+    public DbSet<Team> Teams { get; set; }
 
   }
 }

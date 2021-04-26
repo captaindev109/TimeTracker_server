@@ -10,7 +10,7 @@ using UserApi.Models;
 
 namespace TimeTracker_server.Controllers
 {
-  [Authorize]
+  // [Authorize]
   [Route("api/[controller]")]
   [ApiController]
   public class UserController : ControllerBase
@@ -101,9 +101,27 @@ namespace TimeTracker_server.Controllers
       return NoContent();
     }
 
+    // POST: api/User/login
+    [HttpPost("login")]
+    public async Task<ActionResult<User>> LoginUser(User userBody)
+    {
+      var email = userBody.email;
+      var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email && x.password == userBody.password));
+      if (user == null)
+      {
+        return NotFound();
+      }
+
+      return user;
+    }
+
     private bool UserExists(long id)
     {
       return _context.Users.Any(e => e.id == id);
     }
+
+    // private async User FindUserByEmail(string email)
+    // {
+    // }
   }
 }

@@ -22,16 +22,16 @@ namespace TimeTracker_server.Controllers
 
         // GET: api/Company
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Company>>> GetProjects()
+        public async Task<ActionResult<IEnumerable<Company>>> GetCompanies()
         {
-            return await _context.Projects.ToListAsync();
+            return await _context.Companies.ToListAsync();
         }
 
         // GET: api/Company/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Company>> GetCompany(Guid id)
+        public async Task<ActionResult<Company>> GetCompany(long id)
         {
-            var company = await _context.Projects.FindAsync(id);
+            var company = await _context.Companies.FindAsync(id);
 
             if (company == null)
             {
@@ -44,7 +44,7 @@ namespace TimeTracker_server.Controllers
         // PUT: api/Company/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCompany(Guid id, Company company)
+        public async Task<IActionResult> PutCompany(long id, Company company)
         {
             if (id != company.id)
             {
@@ -77,7 +77,7 @@ namespace TimeTracker_server.Controllers
         [HttpPost]
         public async Task<ActionResult<Company>> PostCompany(Company company)
         {
-            _context.Projects.Add(company);
+            _context.Companies.Add(company);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetCompany", new { id = company.id }, company);
@@ -85,23 +85,23 @@ namespace TimeTracker_server.Controllers
 
         // DELETE: api/Company/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCompany(Guid id)
+        public async Task<IActionResult> DeleteCompany(long id)
         {
-            var company = await _context.Projects.FindAsync(id);
+            var company = await _context.Companies.FindAsync(id);
             if (company == null)
             {
                 return NotFound();
             }
 
-            _context.Projects.Remove(company);
+            _context.Companies.Remove(company);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool CompanyExists(Guid id)
+        private bool CompanyExists(long id)
         {
-            return _context.Projects.Any(e => e.id == id);
+            return _context.Companies.Any(e => e.id == id);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace CompanyApi.Models
     public CompanyContext(DbContextOptions<CompanyContext> options) : base(options)
     {
     }
-    public DbSet<Company> Projects { get; set; }
+    public DbSet<Company> Companies { get; set; }
 
   }
 }

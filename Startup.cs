@@ -57,11 +57,11 @@ namespace TimeTracker_server
 
       services.AddCors();
 
-      services.AddControllers(config =>
-      {
-        var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-        config.Filters.Add(new AuthorizeFilter(policy));
-      });
+      // services.AddControllers(config =>
+      // {
+      //   var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+      //   config.Filters.Add(new AuthorizeFilter(policy));
+      // });
 
       services.AddSwaggerGen(c =>
       {
@@ -83,8 +83,13 @@ namespace TimeTracker_server
 
       app.UseRouting();
 
-      app.UseAuthentication();
-      app.UseAuthorization();
+      app.UseCors(x => x
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+
+      // app.UseAuthentication();
+      // app.UseAuthorization();
 
       app.UseEndpoints(endpoints =>
       {

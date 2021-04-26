@@ -2,18 +2,16 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using UserApi.Models;
+using ResourceTypeApi.Models;
 
-namespace TimeTracker_server.Migrations
+namespace TimeTracker_server.Migrations.ResourceType
 {
-    [DbContext(typeof(UserContext))]
-    [Migration("20210423114522_initial")]
-    partial class initial
+    [DbContext(typeof(ResourceTypeContext))]
+    partial class ResourceTypeContextModelSnapshot : ModelSnapshot
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,29 +19,29 @@ namespace TimeTracker_server.Migrations
                 .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            modelBuilder.Entity("UserApi.Models.User", b =>
+            modelBuilder.Entity("ResourceTypeApi.Models.ResourceType", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<string>("avatar")
-                        .HasColumnType("text");
+                    b.Property<long>("company")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("create_timestamp")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("email")
+                    b.Property<long>("createdBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("description")
                         .HasColumnType("text");
 
-                    b.Property<string>("first_name")
-                        .HasColumnType("text");
+                    b.Property<float>("hourlyRate")
+                        .HasColumnType("real");
 
-                    b.Property<string>("last_name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("password")
+                    b.Property<string>("name")
                         .HasColumnType("text");
 
                     b.Property<string>("status")
@@ -52,9 +50,12 @@ namespace TimeTracker_server.Migrations
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<long>("updatedBy")
+                        .HasColumnType("bigint");
+
                     b.HasKey("id");
 
-                    b.ToTable("Users");
+                    b.ToTable("ResourceTypes");
                 });
 #pragma warning restore 612, 618
         }

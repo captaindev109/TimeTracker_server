@@ -22,16 +22,16 @@ namespace TimeTracker_server.Controllers
 
         // GET: api/ResourceType
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ResourceType>>> GetProjects()
+        public async Task<ActionResult<IEnumerable<ResourceType>>> GetResourceTypes()
         {
-            return await _context.Projects.ToListAsync();
+            return await _context.ResourceTypes.ToListAsync();
         }
 
         // GET: api/ResourceType/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ResourceType>> GetResourceType(Guid id)
+        public async Task<ActionResult<ResourceType>> GetResourceType(long id)
         {
-            var resourceType = await _context.Projects.FindAsync(id);
+            var resourceType = await _context.ResourceTypes.FindAsync(id);
 
             if (resourceType == null)
             {
@@ -44,7 +44,7 @@ namespace TimeTracker_server.Controllers
         // PUT: api/ResourceType/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutResourceType(Guid id, ResourceType resourceType)
+        public async Task<IActionResult> PutResourceType(long id, ResourceType resourceType)
         {
             if (id != resourceType.id)
             {
@@ -77,7 +77,7 @@ namespace TimeTracker_server.Controllers
         [HttpPost]
         public async Task<ActionResult<ResourceType>> PostResourceType(ResourceType resourceType)
         {
-            _context.Projects.Add(resourceType);
+            _context.ResourceTypes.Add(resourceType);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetResourceType", new { id = resourceType.id }, resourceType);
@@ -85,23 +85,23 @@ namespace TimeTracker_server.Controllers
 
         // DELETE: api/ResourceType/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteResourceType(Guid id)
+        public async Task<IActionResult> DeleteResourceType(long id)
         {
-            var resourceType = await _context.Projects.FindAsync(id);
+            var resourceType = await _context.ResourceTypes.FindAsync(id);
             if (resourceType == null)
             {
                 return NotFound();
             }
 
-            _context.Projects.Remove(resourceType);
+            _context.ResourceTypes.Remove(resourceType);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool ResourceTypeExists(Guid id)
+        private bool ResourceTypeExists(long id)
         {
-            return _context.Projects.Any(e => e.id == id);
+            return _context.ResourceTypes.Any(e => e.id == id);
         }
     }
 }
