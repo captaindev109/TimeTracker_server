@@ -36,6 +36,7 @@ namespace TimeTracker_server
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
+      services.AddCors();
 
       // Add framework services.
       services.AddDbContext<UserContext>(options =>
@@ -54,8 +55,6 @@ namespace TimeTracker_server
       options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
       services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-
-      services.AddCors();
 
       // services.AddControllers(config =>
       // {
@@ -78,10 +77,10 @@ namespace TimeTracker_server
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TimeTracker_server v1"));
       }
-
-      app.UseHttpsRedirection();
-
-      app.UseRouting();
+      else
+      {
+        app.UseHsts();
+      }
 
       app.UseCors(x => x
         .AllowAnyOrigin()
@@ -90,6 +89,10 @@ namespace TimeTracker_server
 
       // app.UseAuthentication();
       // app.UseAuthorization();
+
+      app.UseHttpsRedirection();
+
+      app.UseRouting();
 
       app.UseEndpoints(endpoints =>
       {
