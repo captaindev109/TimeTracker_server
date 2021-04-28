@@ -84,7 +84,7 @@ namespace TimeTracker_server
 
       app.UseCors(x => x
         .AllowAnyOrigin()
-        .AllowAnyMethod()
+        .WithMethods("GET", "PUT", "DELETE", "POST", "OPTIONS")
         .AllowAnyHeader());
 
       // app.UseAuthentication();
