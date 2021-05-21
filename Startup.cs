@@ -21,6 +21,7 @@ using ProjectApi.Models;
 using TeamApi.Models;
 using CompanyApi.Models;
 using ResourceTypeApi.Models;
+using TaskItemApi.Models;
 using TimeTableApi.Models;
 
 namespace TimeTracker_server
@@ -56,6 +57,9 @@ namespace TimeTracker_server
       options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
       services.AddDbContext<TimeTableContext>(options =>
+      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+
+      services.AddDbContext<TaskItemContext>(options =>
       options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
       services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
