@@ -8,6 +8,8 @@ namespace TaskItemApi.Models
     public string title { get; set; }
     public string description { get; set; }
     public string status { get; set; }
+    public string position { get; set; }
+    public string tag { get; set; }
     public long project { get; set; }
     public long company { get; set; }
     public long createdBy { get; set; }
@@ -19,11 +21,18 @@ namespace TaskItemApi.Models
     public DateTime update_timestamp { get; set; }
   }
 
-  public enum TaskItemStatus
+  public enum TaskItemPosition
   {
     Active,
     Inactive,
     Archived,
     Deleted
+  }
+
+   public enum TaskItemStatus
+  {
+    Active,
+    Inactive,
+    Archived,
   }
 }
