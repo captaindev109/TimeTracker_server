@@ -47,6 +47,9 @@ namespace TimeTracker_server.Migrations.ResourceType
                     b.Property<string>("status")
                         .HasColumnType("text");
 
+                    b.Property<string>("tag")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");
 

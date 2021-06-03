@@ -14,9 +14,6 @@ namespace TaskItemApi.Models
     public long company { get; set; }
     public long createdBy { get; set; }
     public long updatedBy { get; set; }
-    public long duration { get; set; }
-    public DateTime start { get; set; }
-    public DateTime end { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }

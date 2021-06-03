@@ -12,6 +12,7 @@ namespace ResourceTypeApi.Models
     public long company { get; set; }
     public long createdBy { get; set; }
     public long updatedBy { get; set; }
+    public string tag { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }
