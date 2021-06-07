@@ -1,28 +1,25 @@
 using System;
 using System.Collections.Generic;
 
-namespace ResourceTypeApi.Models
+namespace TaskTypeApi.Models
 {
-  public class ResourceType
+  public class TaskType
   {
     public long id { get; set; }
-    public string name { get; set; }
+    public string title { get; set; }
     public string description { get; set; }
     public string status { get; set; }
-    public float hourlyRate { get; set; }
-    public long company { get; set; }
+    public List<string> tags { get; set; }
     public long createdBy { get; set; }
     public long updatedBy { get; set; }
-    public List<string> tags { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }
 
-  public enum ResourceTypeStatus
+  public enum TaskTypeStatus
   {
     Active,
     Inactive,
     Archived,
-    Deleted
   }
 }

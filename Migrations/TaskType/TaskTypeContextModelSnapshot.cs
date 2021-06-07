@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using ResourceTypeApi.Models;
+using TaskTypeApi.Models;
 
-namespace TimeTracker_server.Migrations.ResourceType
+namespace TimeTracker_server.Migrations.TaskType
 {
-    [DbContext(typeof(ResourceTypeContext))]
-    partial class ResourceTypeContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(TaskTypeContext))]
+    partial class TaskTypeContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -20,15 +20,12 @@ namespace TimeTracker_server.Migrations.ResourceType
                 .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            modelBuilder.Entity("ResourceTypeApi.Models.ResourceType", b =>
+            modelBuilder.Entity("TaskTypeApi.Models.TaskType", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long>("company")
-                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("create_timestamp")
                         .HasColumnType("timestamp without time zone");
@@ -39,17 +36,14 @@ namespace TimeTracker_server.Migrations.ResourceType
                     b.Property<string>("description")
                         .HasColumnType("text");
 
-                    b.Property<float>("hourlyRate")
-                        .HasColumnType("real");
-
-                    b.Property<string>("name")
-                        .HasColumnType("text");
-
                     b.Property<string>("status")
                         .HasColumnType("text");
 
                     b.Property<List<string>>("tags")
                         .HasColumnType("text[]");
+
+                    b.Property<string>("title")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");
@@ -59,7 +53,7 @@ namespace TimeTracker_server.Migrations.ResourceType
 
                     b.HasKey("id");
 
-                    b.ToTable("ResourceTypes");
+                    b.ToTable("TaskTypes");
                 });
 #pragma warning restore 612, 618
         }
