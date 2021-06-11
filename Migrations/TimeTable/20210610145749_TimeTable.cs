@@ -14,12 +14,12 @@ namespace TimeTracker_server.Migrations.TimeTable
                 {
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    task = table.Column<string>(type: "text", nullable: true),
-                    description = table.Column<string>(type: "text", nullable: true),
+                    taskItem = table.Column<long>(type: "bigint", nullable: false),
                     date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    start = table.Column<string>(type: "text", nullable: true),
-                    end = table.Column<string>(type: "text", nullable: true),
-                    project = table.Column<long>(type: "bigint", nullable: false)
+                    start = table.Column<long>(type: "bigint", nullable: false),
+                    end = table.Column<long>(type: "bigint", nullable: false),
+                    duration = table.Column<long>(type: "bigint", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {

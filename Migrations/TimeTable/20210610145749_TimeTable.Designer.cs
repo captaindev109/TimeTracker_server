@@ -10,7 +10,7 @@ using TimeTableApi.Models;
 namespace TimeTracker_server.Migrations.TimeTable
 {
     [DbContext(typeof(TimeTableContext))]
-    [Migration("20210429095838_TimeTable")]
+    [Migration("20210610145749_TimeTable")]
     partial class TimeTable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,17 +34,17 @@ namespace TimeTracker_server.Migrations.TimeTable
                     b.Property<string>("description")
                         .HasColumnType("text");
 
-                    b.Property<string>("end")
-                        .HasColumnType("text");
-
-                    b.Property<long>("project")
+                    b.Property<long>("duration")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("start")
-                        .HasColumnType("text");
+                    b.Property<long>("end")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("task")
-                        .HasColumnType("text");
+                    b.Property<long>("start")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("taskItem")
+                        .HasColumnType("bigint");
 
                     b.HasKey("id");
 
