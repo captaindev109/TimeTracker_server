@@ -179,9 +179,9 @@ namespace TimeTracker_server.Controllers
       try
       {
         using StreamReader sr = new StreamReader("EmailTemplates/ForgotPassword.html");
-        // string s = sr.ReadToEnd();
-        // string body = s.Replace("{full_name}", name)
-        //     .Replace("{token}", token);
+        string s = sr.ReadToEnd();
+        string body = s.Replace("{full_name}", name)
+            .Replace("{token}", token);
 
         SmtpClient client = new SmtpClient("robot@t22.tools");
         client.UseDefaultCredentials = false;
