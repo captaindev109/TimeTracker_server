@@ -193,7 +193,7 @@ namespace TimeTracker_server.Controllers
         MailMessage mailMessage = new MailMessage();
         mailMessage.From = new MailAddress("robot@t22.tools", "Reset password");
         mailMessage.To.Add(to);
-        mailMessage.Body = token;
+        mailMessage.Body = body;
         mailMessage.IsBodyHtml = true;
         mailMessage.Subject = "Reset password";
         await client.SendMailAsync(mailMessage);
