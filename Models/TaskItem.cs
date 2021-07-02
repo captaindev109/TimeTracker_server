@@ -25,6 +25,7 @@ namespace TaskItemApi.Models
   {
     AutoActive,
     Active,
+    InWork,
     Progress,
     Done,
   }
