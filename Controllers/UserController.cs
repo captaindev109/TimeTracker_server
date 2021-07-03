@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using UserApi.Models;
+using DataContracts.RequestBody;
 
 namespace TimeTracker_server.Controllers
 {
@@ -146,9 +147,42 @@ namespace TimeTracker_server.Controllers
       }
       return user;
     }
-    private bool UserExists(long id)
+
+    // POST: api/User/reset-password
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<User>> ResetPassword(ResetPasswordRequest request)
     {
-      return _context.Users.Any(e => e.id == id);
+      try
+      {
+        var password = request.password;
+        var token = request.token;
+        var tokenUser = ReadJsonWebToken(token);
+        var id = tokenUser.FindFirst(claim => claim.Type == "id").Value;
+        var user = await _context.Users.FirstOrDefaultAsync(x => (x.id.ToString() == id));
+
+        if (user == null)
+        {
+          return NotFound();
+        }
+
+        user.password = password;
+        _context.Entry(user).State = EntityState.Modified;
+
+        try
+        {
+          await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+          throw;
+        }
+
+      }
+      catch (Exception ex)
+      {
+        throw ex;
+      }
+      return NoContent();
     }
 
     private string GenerateJsonWebToken(string email, string role, long userId, string tokenType)
@@ -174,6 +208,21 @@ namespace TimeTracker_server.Controllers
       return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    private ClaimsPrincipal ReadJsonWebToken(string token)
+    {
+      var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Settings.Secret));
+
+      var validationParams = new TokenValidationParameters
+      {
+        ValidateLifetime = false,
+        ValidateAudience = false,
+        ValidateIssuer = false,
+        ValidIssuer = _config["Jwt:Issuer"],
+        ValidAudience = _config["Jwt:Issuer"],
+        IssuerSigningKey = securityKey
+      };
+      return new JwtSecurityTokenHandler().ValidateToken(token, validationParams, out SecurityToken validToken);
+    }
     public async Task SendForgotPassword(string name, string token, string to)
     {
       try
@@ -203,6 +252,10 @@ namespace TimeTracker_server.Controllers
       {
         throw ex;
       }
+    }
+    private bool UserExists(long id)
+    {
+      return _context.Users.Any(e => e.id == id);
     }
   }
 }

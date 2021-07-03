@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Logging;
 
 using UserApi.Models;
 using ProjectApi.Models;
@@ -40,6 +41,7 @@ namespace TimeTracker_server
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
+      IdentityModelEventSource.ShowPII = true;
       services.AddCors();
 
       // Add framework services.
