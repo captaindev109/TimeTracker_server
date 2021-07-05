@@ -121,6 +121,10 @@ namespace TimeTracker_server.Controllers
       {
         return NotFound();
       }
+      else if (user.status == "Locked")
+      {
+        return StatusCode(403);
+      }
 
       return user;
     }
