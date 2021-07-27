@@ -6,7 +6,7 @@ namespace CompanyApi.Models
   {
     public long id { get; set; }
     public string name { get; set; }
-    public long user { get; set; }
+    public string status { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }
