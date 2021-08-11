@@ -1,11 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.IO;
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CompanyApi.Models;
+using DataContracts.RequestBody;
+using UserApi.Models;
 
 namespace TimeTracker_server.Controllers
 {
@@ -102,6 +112,65 @@ namespace TimeTracker_server.Controllers
         private bool CompanyExists(long id)
         {
             return _context.Companies.Any(e => e.id == id);
+        }
+
+        // POST: api/create_with_singup
+        [HttpPost("create_with_singup")]
+        public async Task<ActionResult<Company>> CreateCompanyWithSignup(Company company)
+        {
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetCompany", new { id = company.id }, company);
+        }
+
+        // POST: api/join_company_signup
+        [HttpPost("join_company_signup")]
+        public async Task<ActionResult<Company>> JoinCompanyWithSignup(RequestJoinUser userBody)
+        {
+            var ownerEmail = userBody.ownerEmail;
+            var userName = userBody.userName;
+
+            try
+            {
+                await SendCompanyJoinRequest(userName, "will", ownerEmail);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return null;
+        }
+
+        public async Task SendCompanyJoinRequest(string name, string token, string to)
+        {
+            try
+            {
+                using StreamReader sr = new StreamReader("EmailTemplates/JoinRequest.html");
+                string s = sr.ReadToEnd();
+                string body = s.Replace("{request_user_name}", name)
+                    .Replace("{token}", token);
+
+                SmtpClient client = new SmtpClient("robot@t22.tools");
+                client.UseDefaultCredentials = false;
+                client.EnableSsl = true;
+                client.Port = 587;
+                client.Host = "host212.checkdomain.de";
+                client.Credentials = new NetworkCredential("robot@t22.tools", "?T6D2e#r0%p?mA4G");
+
+                MailMessage mailMessage = new MailMessage();
+                mailMessage.From = new MailAddress("robot@t22.tools", "Reset password");
+                mailMessage.To.Add(to);
+                mailMessage.Body = body;
+                mailMessage.IsBodyHtml = true;
+                mailMessage.Subject = "Reset password";
+                await client.SendMailAsync(mailMessage);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }
