@@ -34,12 +34,4 @@ namespace UserApi.Models
     worker,
   }
 
-  public class RequestJoinUser
-  {
-    public string userName { get; set; }
-    public string email { get; set; }
-    public long userId { get; set; }
-    public string ownerEmail { get; set; }
-
-  }
 }

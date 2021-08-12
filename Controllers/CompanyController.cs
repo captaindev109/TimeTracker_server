@@ -114,8 +114,8 @@ namespace TimeTracker_server.Controllers
             return _context.Companies.Any(e => e.id == id);
         }
 
-        // POST: api/create_with_singup
-        [HttpPost("create_with_singup")]
+        // POST: api/create_with_signup
+        [HttpPost("create_with_signup")]
         public async Task<ActionResult<Company>> CreateCompanyWithSignup(Company company)
         {
             _context.Companies.Add(company);
@@ -135,7 +135,7 @@ namespace TimeTracker_server.Controllers
             {
                 await SendCompanyJoinRequest(userName, "will", ownerEmail);
             }
-            catch (Exception ex)
+            catch (Exception ex)    
             {
                 throw ex;
             }
@@ -159,11 +159,11 @@ namespace TimeTracker_server.Controllers
                 client.Credentials = new NetworkCredential("robot@t22.tools", "?T6D2e#r0%p?mA4G");
 
                 MailMessage mailMessage = new MailMessage();
-                mailMessage.From = new MailAddress("robot@t22.tools", "Reset password");
+                mailMessage.From = new MailAddress("robot@t22.tools", "Request Join to company");
                 mailMessage.To.Add(to);
                 mailMessage.Body = body;
                 mailMessage.IsBodyHtml = true;
-                mailMessage.Subject = "Reset password";
+                mailMessage.Subject = "Request Join to company";
                 await client.SendMailAsync(mailMessage);
 
             }

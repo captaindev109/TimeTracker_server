@@ -32,11 +32,11 @@ namespace TimeTracker_server.Migrations.UserAcl
                     b.Property<long>("objectId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("objectType")
-                        .HasColumnType("integer");
+                    b.Property<string>("objectType")
+                        .HasColumnType("text");
 
-                    b.Property<int>("role")
-                        .HasColumnType("integer");
+                    b.Property<string>("role")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");

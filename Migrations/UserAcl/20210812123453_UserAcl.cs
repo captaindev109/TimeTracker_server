@@ -15,9 +15,9 @@ namespace TimeTracker_server.Migrations.UserAcl
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     userId = table.Column<long>(type: "bigint", nullable: false),
-                    role = table.Column<int>(type: "integer", nullable: false),
+                    role = table.Column<string>(type: "text", nullable: true),
                     objectId = table.Column<long>(type: "bigint", nullable: false),
-                    objectType = table.Column<int>(type: "integer", nullable: false),
+                    objectType = table.Column<string>(type: "text", nullable: true),
                     create_timestamp = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     update_timestamp = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },

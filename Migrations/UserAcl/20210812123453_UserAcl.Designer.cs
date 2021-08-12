@@ -10,7 +10,7 @@ using UserAclApi.Models;
 namespace TimeTracker_server.Migrations.UserAcl
 {
     [DbContext(typeof(UserAclContext))]
-    [Migration("20210811122356_UserAcl")]
+    [Migration("20210812123453_UserAcl")]
     partial class UserAcl
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,11 +34,11 @@ namespace TimeTracker_server.Migrations.UserAcl
                     b.Property<long>("objectId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("objectType")
-                        .HasColumnType("integer");
+                    b.Property<string>("objectType")
+                        .HasColumnType("text");
 
-                    b.Property<int>("role")
-                        .HasColumnType("integer");
+                    b.Property<string>("role")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");
