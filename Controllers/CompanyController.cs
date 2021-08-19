@@ -142,7 +142,7 @@ namespace TimeTracker_server.Controllers
             return null;
         }
 
-        public async Task SendCompanyJoinRequest(string name, string token, string to)
+        private async Task SendCompanyJoinRequest(string name, string token, string to)
         {
             try
             {

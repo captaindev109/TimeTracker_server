@@ -129,6 +129,31 @@ namespace TimeTracker_server.Controllers
       return user;
     }
 
+    // PUT: api/User/update-profile
+    [HttpPut("update-profile")]
+    public async Task<ActionResult<User>> UpdateProfile(User user)
+    {
+      _context.Entry(user).State = EntityState.Modified;
+
+      try
+      {
+        await _context.SaveChangesAsync();
+      }
+      catch (DbUpdateConcurrencyException)
+      {
+        if (!UserExists(user.id))
+        {
+          return NotFound();
+        }
+        else
+        {
+          throw;
+        }
+      }
+
+      return user;
+    }
+
     // POST: api/User/forgot-password
     [HttpPost("forgot-password")]
     public async Task<ActionResult<User>> RequestForgotPassword(User userBody)
@@ -227,7 +252,7 @@ namespace TimeTracker_server.Controllers
       };
       return new JwtSecurityTokenHandler().ValidateToken(token, validationParams, out SecurityToken validToken);
     }
-    public async Task SendForgotPassword(string name, string token, string to)
+    private async Task SendForgotPassword(string name, string token, string to)
     {
       try
       {
