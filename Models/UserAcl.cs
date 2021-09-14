@@ -5,7 +5,8 @@ namespace UserAclApi.Models
   public class UserAcl
   {
     public long id { get; set; }
-    public long userId { get; set; }
+    public long sourceId { get; set; }
+    public string sourceType { get; set; }
     public string role { get; set; }
     public long objectId { get; set; }
     public string objectType { get; set; }

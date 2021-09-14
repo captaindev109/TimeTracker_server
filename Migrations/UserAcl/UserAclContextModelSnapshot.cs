@@ -38,11 +38,14 @@ namespace TimeTracker_server.Migrations.UserAcl
                     b.Property<string>("role")
                         .HasColumnType("text");
 
+                    b.Property<long>("sourceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("sourceType")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");
-
-                    b.Property<long>("userId")
-                        .HasColumnType("bigint");
 
                     b.HasKey("id");
 

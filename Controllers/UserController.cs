@@ -155,6 +155,27 @@ namespace TimeTracker_server.Controllers
     }
 
     // POST: api/User/forgot-password
+    [HttpPost("invite-user")]
+    public async Task<ActionResult<User>> InviteUser(RequestInviteUser request)
+    {
+      var email = request.email;
+      var role = request.role;
+      var objectId = request.objectId;
+      var objectType = request.objectType;
+    
+      try
+      {
+        var code = GenerateInvitationToken(email, role, objectId, objectType, "invite_user");
+        await SendUserInvitation("There!", code, email);
+      }
+      catch (Exception ex)
+      {
+        throw ex;
+      }
+      return NoContent();
+    }
+
+    // POST: api/User/forgot-password
     [HttpPost("forgot-password")]
     public async Task<ActionResult<User>> RequestForgotPassword(User userBody)
     {
@@ -281,6 +302,61 @@ namespace TimeTracker_server.Controllers
       {
         throw ex;
       }
+    }
+
+    private async Task SendUserInvitation(string name, string token, string to)
+    {
+      try
+      {
+        using StreamReader sr = new StreamReader("EmailTemplates/InviteUser.html");
+        string s = sr.ReadToEnd();
+        string body = s.Replace("{full_name}", name)
+            .Replace("{token}", token);
+
+        SmtpClient client = new SmtpClient("robot@t22.tools");
+        client.UseDefaultCredentials = false;
+        client.EnableSsl = true;
+        client.Port = 587;
+        client.Host = "host212.checkdomain.de";
+        client.Credentials = new NetworkCredential("robot@t22.tools", "?T6D2e#r0%p?mA4G");
+
+        MailMessage mailMessage = new MailMessage();
+        mailMessage.From = new MailAddress("robot@t22.tools", "Invitation");
+        mailMessage.To.Add(to);
+        mailMessage.Body = body;
+        mailMessage.IsBodyHtml = true;
+        mailMessage.Subject = "Invitation";
+        await client.SendMailAsync(mailMessage);
+
+      }
+      catch (Exception ex)
+      {
+        throw ex;
+      }
+    }
+
+    private string GenerateInvitationToken(string email, string role, long objectId, string objectType, string tokenType)
+    {
+      var claims = new List<Claim>
+            {
+                new Claim("email", email),
+                new Claim("role", role),
+                new Claim("objectId", objectId.ToString()),
+                new Claim("objectType", objectType),
+                new Claim("type", tokenType),
+            };
+
+
+      var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Settings.Secret));
+      var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
+
+      var token = new JwtSecurityToken(_config["Jwt:Issuer"],
+        _config["Jwt:Issuer"],
+        claims,
+        expires: DateTime.Now.AddYears(1),
+        signingCredentials: credentials);
+
+      return new JwtSecurityTokenHandler().WriteToken(token);
     }
     private bool UserExists(long id)
     {

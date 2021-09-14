@@ -2,16 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using TeamApi.Models;
+using UserAclApi.Models;
 
-namespace TimeTracker_server.Migrations.Team
+namespace TimeTracker_server.Migrations.UserAcl
 {
-    [DbContext(typeof(TeamContext))]
-    partial class TeamContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(UserAclContext))]
+    [Migration("20210914055049_fieldUpdate")]
+    partial class fieldUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -19,7 +21,7 @@ namespace TimeTracker_server.Migrations.Team
                 .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            modelBuilder.Entity("TeamApi.Models.Team", b =>
+            modelBuilder.Entity("UserAclApi.Models.UserAcl", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -29,27 +31,27 @@ namespace TimeTracker_server.Migrations.Team
                     b.Property<DateTime>("create_timestamp")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<long>("createdBy")
+                    b.Property<long>("objectId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("description")
+                    b.Property<string>("objectType")
                         .HasColumnType("text");
 
-                    b.Property<string>("name")
+                    b.Property<string>("role")
                         .HasColumnType("text");
 
-                    b.Property<string>("status")
+                    b.Property<long>("sourceId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("sourceType")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("update_timestamp")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<long>("updatedBy")
-                        .HasColumnType("bigint");
-
                     b.HasKey("id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("UserAcls");
                 });
 #pragma warning restore 612, 618
         }

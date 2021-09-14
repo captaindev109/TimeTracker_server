@@ -9,9 +9,6 @@ namespace TeamApi.Models
     public string name { get; set; }
     public string description { get; set; }
     public string status { get; set; }
-    public long company { get; set; }
-    public List<long> members { get; set; }
-    public long teamLead { get; set; }
     public long createdBy { get; set; }
     public long updatedBy { get; set; }
     public DateTime create_timestamp { get; set; }

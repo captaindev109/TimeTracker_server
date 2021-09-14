@@ -12,10 +12,6 @@ namespace ProjectApi.Models
     public string publicStatus { get; set; }
     public DateTime planStart { get; set; }
     public DateTime planEnd { get; set; }
-    public List<long> teams { get; set; }
-    public List<long> projectManager { get; set; }
-    public List<long> projectManagerAssistant { get; set; }
-    public long company { get; set; }
     public long createdBy { get; set; }
     public long updatedBy { get; set; }
     public DateTime create_timestamp { get; set; }

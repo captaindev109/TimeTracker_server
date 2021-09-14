@@ -2,16 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using TeamApi.Models;
+using ProjectApi.Models;
 
-namespace TimeTracker_server.Migrations.Team
+namespace TimeTracker_server.Migrations.Project
 {
-    [DbContext(typeof(TeamContext))]
-    partial class TeamContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(ProjectContext))]
+    [Migration("20210914055931_remove_filed")]
+    partial class remove_filed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -19,7 +21,7 @@ namespace TimeTracker_server.Migrations.Team
                 .HasAnnotation("ProductVersion", "5.0.4")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            modelBuilder.Entity("TeamApi.Models.Team", b =>
+            modelBuilder.Entity("ProjectApi.Models.Project", b =>
                 {
                     b.Property<long>("id")
                         .ValueGeneratedOnAdd()
@@ -38,6 +40,15 @@ namespace TimeTracker_server.Migrations.Team
                     b.Property<string>("name")
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("planEnd")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("planStart")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("publicStatus")
+                        .HasColumnType("text");
+
                     b.Property<string>("status")
                         .HasColumnType("text");
 
@@ -49,7 +60,7 @@ namespace TimeTracker_server.Migrations.Team
 
                     b.HasKey("id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Projects");
                 });
 #pragma warning restore 612, 618
         }
