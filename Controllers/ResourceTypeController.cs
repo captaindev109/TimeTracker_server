@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ResourceTypeApi.Models;
+using TimeTracker_server.Models;
+using TimeTracker_server.Data;
 
 namespace TimeTracker_server.Controllers
 {
@@ -13,9 +14,9 @@ namespace TimeTracker_server.Controllers
     [ApiController]
     public class ResourceTypeController : ControllerBase
     {
-        private readonly ResourceTypeContext _context;
+        private readonly MyDbContext _context;
 
-        public ResourceTypeController(ResourceTypeContext context)
+        public ResourceTypeController(MyDbContext context)
         {
             _context = context;
         }

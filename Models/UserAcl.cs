@@ -1,6 +1,6 @@
 using System;
 
-namespace UserAclApi.Models
+namespace TimeTracker_server.Models
 {
   public class UserAcl
   {

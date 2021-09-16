@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ProjectApi.Models;
+using TimeTracker_server.Models;
+using TimeTracker_server.Data;
 
 namespace TimeTracker_server.Controllers
 {
@@ -13,9 +14,9 @@ namespace TimeTracker_server.Controllers
     [ApiController]
     public class ProjectController : ControllerBase
     {
-        private readonly ProjectContext _context;
+        private readonly MyDbContext _context;
 
-        public ProjectController(ProjectContext context)
+        public ProjectController(MyDbContext context)
         {
             _context = context;
         }

@@ -1,6 +1,6 @@
 using System;
 
-namespace CompanyApi.Models
+namespace TimeTracker_server.Models
 {
   public class Company
   {

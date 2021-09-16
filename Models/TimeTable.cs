@@ -1,6 +1,6 @@
 using System;
 
-namespace TimeTableApi.Models
+namespace TimeTracker_server.Models
 {
   public class TimeTable
   {

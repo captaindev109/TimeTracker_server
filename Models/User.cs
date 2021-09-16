@@ -1,6 +1,6 @@
 using System;
 
-namespace UserApi.Models
+namespace TimeTracker_server.Models
 {
   public class User
   {

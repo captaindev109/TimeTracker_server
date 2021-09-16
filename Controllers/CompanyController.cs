@@ -13,9 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CompanyApi.Models;
 using DataContracts.RequestBody;
-using UserApi.Models;
+using TimeTracker_server.Models;
+using TimeTracker_server.Data;
 
 namespace TimeTracker_server.Controllers
 {
@@ -23,9 +23,9 @@ namespace TimeTracker_server.Controllers
     [ApiController]
     public class CompanyController : ControllerBase
     {
-        private readonly CompanyContext _context;
+        private readonly MyDbContext _context;
 
-        public CompanyController(CompanyContext context)
+        public CompanyController(MyDbContext context)
         {
             _context = context;
         }

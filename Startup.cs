@@ -17,15 +17,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Logging;
 
-using UserApi.Models;
-using ProjectApi.Models;
-using TeamApi.Models;
-using CompanyApi.Models;
-using ResourceTypeApi.Models;
-using TaskItemApi.Models;
-using TaskTypeApi.Models;
-using TimeTableApi.Models;
-using UserAclApi.Models;
+using TimeTracker_server.Data;
 
 namespace TimeTracker_server
 {
@@ -45,31 +37,7 @@ namespace TimeTracker_server
       services.AddCors();
 
       // Add framework services.
-      services.AddDbContext<UserContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<ProjectContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<TeamContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<CompanyContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<ResourceTypeContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<TimeTableContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<TaskItemContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<TaskTypeContext>(options =>
-      options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-
-      services.AddDbContext<UserAclContext>(options =>
+      services.AddDbContext<MyDbContext>(options =>
       options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
       services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);

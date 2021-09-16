@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TaskItemApi.Models
+namespace TimeTracker_server.Models
 {
   public class TaskItem
   {

@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskItemApi.Models;
+using TimeTracker_server.Models;
+using TimeTracker_server.Data;
 
 namespace TimeTracker_server.Controllers
 {
@@ -13,9 +14,9 @@ namespace TimeTracker_server.Controllers
     [ApiController]
     public class TaskItemController : ControllerBase
     {
-        private readonly TaskItemContext _context;
+        private readonly MyDbContext _context;
 
-        public TaskItemController(TaskItemContext context)
+        public TaskItemController(MyDbContext context)
         {
             _context = context;
         }
