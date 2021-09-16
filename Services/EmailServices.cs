@@ -25,7 +25,7 @@ namespace TimeTracker_server.Services
         client.Credentials = new NetworkCredential("robot@t22.tools", "?T6D2e#r0%p?mA4G");
 
         MailMessage mailMessage = new MailMessage();
-        mailMessage.From = new MailAddress("robot@t22.tools", subject);
+        mailMessage.From = new MailAddress("robot@t22.tools", "FeldeIt TimeTracker");
         mailMessage.To.Add(to);
         mailMessage.Body = body;
         mailMessage.IsBodyHtml = true;

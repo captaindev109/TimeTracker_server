@@ -172,7 +172,7 @@ namespace TimeTracker_server.Controllers
         var token = TokenService.GenerateWebToken(
           new ClaimsIdentity(new Claim[]
           {
-            new Claim("email", user.email),
+            new Claim("emailAdress", user.email),
             new Claim("type", "forgot_password"),
             new Claim("id", user.id.ToString()),
           })
@@ -235,18 +235,18 @@ namespace TimeTracker_server.Controllers
     [HttpPost("invite-user")]
     public async Task<ActionResult<User>> InviteUser(RequestInviteUser request)
     {
-      var email = request.email;
-      var role = request.role;
-      var objectId = request.objectId;
-      var objectType = request.objectType;
+      string email = request.email;
+      string role = request.role;
+      long objectId = request.objectId;
+      string objectType = request.objectType;
 
       try
       {
         var token = TokenService.GenerateWebToken(
           new ClaimsIdentity(new Claim[]
           {
-            new Claim("email", email),
-            new Claim("role", role),
+            new Claim("emailAddress", email),
+            new Claim("roleText", role),
             new Claim("objectId", objectId.ToString()),
             new Claim("objectType", objectType),
             new Claim("type", "invite_user"),
@@ -274,8 +274,8 @@ namespace TimeTracker_server.Controllers
         var token = request.token;
 
         var tokenUser = TokenService.ReadWebToken(token);
-        var email = tokenUser.FindFirst(claim => claim.Type == "email").Value;
-        var role = tokenUser.FindFirst(claim => claim.Type == "role").Value;
+        var email = tokenUser.FindFirst(claim => claim.Type == "emailAddress").Value;
+        var role = tokenUser.FindFirst(claim => claim.Type == "roleText").Value;
         var objectId = tokenUser.FindFirst(claim => claim.Type == "objectId").Value;
         var objectType = tokenUser.FindFirst(claim => claim.Type == "objectType").Value;
 
@@ -283,10 +283,8 @@ namespace TimeTracker_server.Controllers
 
         if (user == null)
         {
-          return NotFound();
+          return NotFound("no user");
         }
-
-        _context.Entry(user).State = EntityState.Modified;
 
         var newAcl = new UserAcl();
         newAcl.sourceId = user.id;
@@ -296,6 +294,9 @@ namespace TimeTracker_server.Controllers
         newAcl.objectType = objectType;
 
         _context.UserAcls.Add(newAcl);
+        
+        user.status = "Active";
+        _context.Entry(user).State = EntityState.Modified;
 
         try
         {
