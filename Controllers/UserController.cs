@@ -237,7 +237,7 @@ namespace TimeTracker_server.Controllers
     {
       string email = request.email;
       string role = request.role;
-      long objectId = request.objectId;
+      List<long> objectId = request.objectId;
       string objectType = request.objectType;
 
       try
@@ -247,7 +247,7 @@ namespace TimeTracker_server.Controllers
           {
             new Claim("emailAddress", email),
             new Claim("roleText", role),
-            new Claim("objectId", objectId.ToString()),
+            new Claim("objectId", string.Join(",", objectId)),
             new Claim("objectType", objectType),
             new Claim("type", "invite_user"),
           })
@@ -276,7 +276,7 @@ namespace TimeTracker_server.Controllers
         var tokenUser = TokenService.ReadWebToken(token);
         var email = tokenUser.FindFirst(claim => claim.Type == "emailAddress").Value;
         var role = tokenUser.FindFirst(claim => claim.Type == "roleText").Value;
-        var objectId = tokenUser.FindFirst(claim => claim.Type == "objectId").Value;
+        var objectIds = tokenUser.FindFirst(claim => claim.Type == "objectId").Value;
         var objectType = tokenUser.FindFirst(claim => claim.Type == "objectType").Value;
 
         var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email));
@@ -286,15 +286,18 @@ namespace TimeTracker_server.Controllers
           return NotFound("no user");
         }
 
-        var newAcl = new UserAcl();
-        newAcl.sourceId = user.id;
-        newAcl.sourceType = "user";
-        newAcl.role = role;
-        newAcl.objectId = long.Parse(objectId);
-        newAcl.objectType = objectType;
+        foreach (var objectId in objectIds.Split(',').ToList())
+        {
+          var newAcl = new UserAcl();
+          newAcl.sourceId = user.id;
+          newAcl.sourceType = "user";
+          newAcl.role = role;
+          newAcl.objectId = long.Parse(objectId);
+          newAcl.objectType = objectType;
 
-        _context.UserAcls.Add(newAcl);
-        
+          _context.UserAcls.Add(newAcl);
+        }
+
         user.status = "Active";
         _context.Entry(user).State = EntityState.Modified;
 

@@ -19,33 +19,49 @@ using TimeTracker_server.Data;
 
 namespace TimeTracker_server.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AuthController : ControllerBase
+  [Route("api/[controller]")]
+  [ApiController]
+  public class AuthController : ControllerBase
+  {
+    private readonly MyDbContext _context;
+
+    public AuthController(MyDbContext context)
     {
-        private readonly MyDbContext _context;
-
-        public AuthController(MyDbContext context)
-        {
-            _context = context;
-        }
-
-        // POST: api/auth/select-company
-        [HttpPost("select-company")]
-        public async Task<ActionResult<IEnumerable<Company>>> CreateCompanyWithSignup(Company company)
-        {
-//SELECT DISTINCT "objectId" FROM public."UserAcls" WHERE "objectType"='company' AND (
-//CONCAT("sourceId", "sourceType")=ANY(SELECT DISTINCT CONCAT("objectId", "objectType") 
-// FROM public."UserAcls" WHERE "sourceId" = 1 AND "sourceType" = 'user') OR ("sourceId"=1 AND "sourceType"='user'))
-
-            // return await _context.Companies.ToListAsync();
-            // var filteredCompanies = _context.UserAcls.Where(x => x.objectType == "company").Select(x => x.objectId ).Distinct();
-            // _context.Companies.Add(company);
-            // await _context.SaveChangesAsync();
-
-            // return CreatedAtAction("GetCompany", new { id = company.id }, company);
-            return NoContent();
-        }
-
+      _context = context;
     }
+
+    // GET: api/auth/get-company/5
+    [HttpGet("get-company/{id}")]
+    public async Task<ActionResult<IEnumerable<Company>>> SelectCompany(long id)
+    {
+      //SELECT DISTINCT "objectId" FROM public."UserAcls" WHERE "objectType"='company' AND (
+      //CONCAT("sourceId", "sourceType")=ANY(SELECT DISTINCT CONCAT("objectId", "objectType") 
+      // FROM public."UserAcls" WHERE "sourceId" = 1 AND "sourceType" = 'user') OR ("sourceId"=1 AND "sourceType"='user'))
+
+      var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == id && x.sourceType == "user").ToListAsync();
+
+      var companyAcls = new List<long>();
+      foreach (var acl in filteredAcls)
+      {
+        if (acl.objectType == "company")
+        {
+          companyAcls.Add(acl.objectId);
+        }
+        else
+        {
+          var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company").FirstAsync();
+          companyAcls.Add(relatedAcl.objectId);
+        }
+      }
+
+      var filteredCompanies = await _context.Companies.Where(x => companyAcls.Contains(x.id)).ToListAsync();
+
+      if (filteredCompanies == null)
+      {
+        return NoContent();
+      }
+      return filteredCompanies;
+    }
+
+  }
 }
