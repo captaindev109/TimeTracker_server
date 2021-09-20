@@ -113,119 +113,6 @@ namespace TimeTracker_server.Controllers
       return NoContent();
     }
 
-    // POST: api/User/login
-    [HttpPost("login")]
-    public async Task<ActionResult<User>> LoginUser(User userBody)
-    {
-      var email = userBody.email;
-      var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email && x.password == userBody.password));
-      if (user == null)
-      {
-        return NotFound();
-      }
-      else if (user.status == "Locked")
-      {
-        return StatusCode(403);
-      }
-
-      return user;
-    }
-
-    // PUT: api/User/update-profile
-    [HttpPut("update-profile")]
-    public async Task<ActionResult<User>> UpdateProfile(User user)
-    {
-      _context.Entry(user).State = EntityState.Modified;
-
-      try
-      {
-        await _context.SaveChangesAsync();
-      }
-      catch (DbUpdateConcurrencyException)
-      {
-        if (!UserExists(user.id))
-        {
-          return NotFound();
-        }
-        else
-        {
-          throw;
-        }
-      }
-
-      return user;
-    }
-
-    // POST: api/User/forgot-password
-    [HttpPost("forgot-password")]
-    public async Task<ActionResult<User>> RequestForgotPassword(User userBody)
-    {
-      var email = userBody.email;
-      var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email));
-      if (user == null)
-      {
-        return BadRequest(new { message = "There are no accounts linked to this email!" });
-      }
-
-      try
-      {
-        var token = TokenService.GenerateWebToken(
-          new ClaimsIdentity(new Claim[]
-          {
-            new Claim("emailAdress", user.email),
-            new Claim("type", "forgot_password"),
-            new Claim("id", user.id.ToString()),
-          })
-        );
-
-        using StreamReader sr = new StreamReader("EmailTemplates/ForgotPassword.html");
-        string body = sr.ReadToEnd().Replace("{full_name}", user.firstName + user.lastName).Replace("{token}", token);
-        await EmailService.SendEmail(email, "Forgot Password Request", body);
-      }
-      catch (Exception ex)
-      {
-        throw ex;
-      }
-      return user;
-    }
-
-    // POST: api/User/reset-password
-    [HttpPost("reset-password")]
-    public async Task<ActionResult<User>> ResetPassword(ResetPasswordRequest request)
-    {
-      try
-      {
-        var password = request.password;
-        var token = request.token;
-        var tokenUser = TokenService.ReadWebToken(token);
-        var id = tokenUser.FindFirst(claim => claim.Type == "id").Value;
-        var user = await _context.Users.FirstOrDefaultAsync(x => (x.id.ToString() == id));
-
-        if (user == null)
-        {
-          return NotFound();
-        }
-
-        user.password = password;
-        _context.Entry(user).State = EntityState.Modified;
-
-        try
-        {
-          await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-          throw;
-        }
-
-      }
-      catch (Exception ex)
-      {
-        throw ex;
-      }
-      return NoContent();
-    }
-
     private bool UserExists(long id)
     {
       return _context.Users.Any(e => e.id == id);
@@ -239,6 +126,19 @@ namespace TimeTracker_server.Controllers
       string role = request.role;
       List<long> objectId = request.objectId;
       string objectType = request.objectType;
+
+      bool isExist = await _context.Users.AnyAsync(e => e.email == email);
+
+      if (isExist == false)
+      {
+        var invitedUser = new User();
+        invitedUser.email = email;
+        invitedUser.status = "Invited";
+        invitedUser.create_timestamp = DateTime.UtcNow;
+        invitedUser.update_timestamp = DateTime.UtcNow;
+        _context.Users.Add(invitedUser);
+        await _context.SaveChangesAsync();
+      }
 
       try
       {
@@ -295,10 +195,18 @@ namespace TimeTracker_server.Controllers
           newAcl.objectId = long.Parse(objectId);
           newAcl.objectType = objectType;
 
+          var isExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == newAcl.sourceId && x.sourceType == "user" && x.role == newAcl.role && x.objectId == newAcl.objectId && x.objectType == newAcl.objectType);
+          if (isExist != null)
+          {
+            break;
+          }
+
+          newAcl.create_timestamp = DateTime.UtcNow;
+          newAcl.update_timestamp = DateTime.UtcNow;
+
           _context.UserAcls.Add(newAcl);
         }
 
-        user.status = "Active";
         _context.Entry(user).State = EntityState.Modified;
 
         try

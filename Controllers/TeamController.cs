@@ -30,7 +30,7 @@ namespace TimeTracker_server.Controllers
     }
     // POST: api/Team/with-roles
     [HttpPost("with-roles")]
-    public async Task<ActionResult<IEnumerable<Project>>> GetProjectsWithRoles(DataWithRolesRequest request)
+    public async Task<ActionResult<IEnumerable<TeamWithRoleResponse>>> GetProjectsWithRoles(DataWithRolesRequest request)
     {
       var companyId = request.companyId;
       var userId = request.userId;
@@ -53,9 +53,28 @@ namespace TimeTracker_server.Controllers
         var tmpTeamIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "assigned_in" && x.objectType == "team" && teamIds.Contains(x.sourceId)).Select(x => x.objectId).ToListAsync();
         teamIds.AddRange(tmpTeamIds);
       }
+      var editableTeamIds = await _context.UserAcls.Where(x => x.role == "team_lead" && x.sourceType == "user" && x.sourceId == userId && x.objectType == "team").Select(x => x.objectId).ToListAsync();
 
-      return await _context.Projects.Where(x => teamIds.Contains(x.id)).ToListAsync();
+      var teams = await _context.Teams.Where(x => teamIds.Contains(x.id)).ToListAsync();
+      var resTeams = new List<TeamWithRoleResponse>();
+
+      foreach (var item in teams)
+      {
+        var isEditable = false;
+        if (editableTeamIds.Contains(item.id))
+        {
+          isEditable = true;
+        }
+        var teamItem = new TeamWithRoleResponse();
+        teamItem.team = item;
+        teamItem.isEditable = isEditable;
+
+        resTeams.Add(teamItem);
+      }
+
+      return resTeams;
     }
+
     // GET: api/Team/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Team>> GetTeam(long id)
@@ -104,12 +123,28 @@ namespace TimeTracker_server.Controllers
     // POST: api/Team
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Team>> PostTeam(Team team)
+    public async Task<ActionResult<Team>> PostTeam(CreateTeamRequest request)
     {
+      var companyId = request.companyId;
+      var team = request.team;
+      team.create_timestamp = DateTime.UtcNow;
+      team.update_timestamp = DateTime.UtcNow;
       _context.Teams.Add(team);
       await _context.SaveChangesAsync();
 
-      return CreatedAtAction("GetTeam", new { id = team.id }, team);
+      var createdTeamId = team.id;
+
+      var userAcl = new UserAcl();
+      userAcl.sourceId = createdTeamId;
+      userAcl.sourceType = "team";
+      userAcl.role = "created_in";
+      userAcl.objectId = companyId;
+      userAcl.objectType = "company";
+      userAcl.create_timestamp = DateTime.UtcNow;
+      userAcl.update_timestamp = DateTime.UtcNow;
+      _context.UserAcls.Add(userAcl);
+      await _context.SaveChangesAsync();
+      return team;
     }
 
     // DELETE: api/Team/5

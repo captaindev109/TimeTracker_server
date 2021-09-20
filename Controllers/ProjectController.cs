@@ -31,11 +31,13 @@ namespace TimeTracker_server.Controllers
 
     // POST: api/Project/with-roles
     [HttpPost("with-roles")]
-    public async Task<ActionResult<IEnumerable<Project>>> GetProjectsWithRoles(DataWithRolesRequest request)
+    public async Task<ActionResult<IEnumerable<ProjectWithRoleResponse>>> GetProjectsWithRoles(DataWithRolesRequest request)
     {
       var companyId = request.companyId;
       var userId = request.userId;
       List<string> roles = request.userRoles;
+
+      var editableProjectIds = new List<long>();
 
       var projectIds = new List<long>();
       if (roles.Contains("company_admin") || roles.Contains("company_controller"))
@@ -47,6 +49,7 @@ namespace TimeTracker_server.Controllers
       {
         var tmpProjectIds = await _context.UserAcls.Where(x => (x.role == "project_manager" || x.role == "project_assistant") && x.sourceType == "user" && x.sourceId == userId && x.objectType == "project").Select(x => x.objectId).ToListAsync();
         projectIds.AddRange(tmpProjectIds);
+        editableProjectIds = tmpProjectIds;
       }
       else if (roles.Contains("team_lead") || roles.Contains("worker"))
       {
@@ -67,7 +70,23 @@ namespace TimeTracker_server.Controllers
       } // public search 
 
       var projects = await _context.Projects.Where(x => projectIds.Contains(x.id)).ToListAsync();
-      return projects;
+      var resProjects = new List<ProjectWithRoleResponse>();
+
+      foreach (var item in projects)
+      {
+        var isEditable = false;
+        if (editableProjectIds.Contains(item.id))
+        {
+          isEditable = true;
+        }
+        var projectItem = new ProjectWithRoleResponse();
+        projectItem.project = item;
+        projectItem.isEditable = isEditable;
+
+        resProjects.Add(projectItem);
+      }
+
+      return resProjects;
     }
 
     // GET: api/Project/5
@@ -118,12 +137,28 @@ namespace TimeTracker_server.Controllers
     // POST: api/Project
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<Project>> PostProject(Project project)
+    public async Task<ActionResult<Project>> PostProject(CreateProjectRequest request)
     {
+      var companyId = request.companyId;
+      var project = request.project;
+      project.create_timestamp = DateTime.UtcNow;
+      project.update_timestamp = DateTime.UtcNow;
       _context.Projects.Add(project);
       await _context.SaveChangesAsync();
 
-      return CreatedAtAction("GetProject", new { id = project.id }, project);
+      var createdProjectId = project.id;
+
+      var userAcl = new UserAcl();
+      userAcl.sourceId = createdProjectId;
+      userAcl.sourceType = "project";
+      userAcl.role = "created_in";
+      userAcl.objectId = companyId;
+      userAcl.objectType = "company";
+      userAcl.create_timestamp = DateTime.UtcNow;
+      userAcl.update_timestamp = DateTime.UtcNow;
+      _context.UserAcls.Add(userAcl);
+      await _context.SaveChangesAsync();
+      return project;
     }
 
     // DELETE: api/Project/5

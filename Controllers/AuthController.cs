@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using DataContracts.RequestBody;
 using TimeTracker_server.Models;
 using TimeTracker_server.Data;
+using TimeTracker_server.Services;
 
 namespace TimeTracker_server.Controllers
 {
@@ -84,6 +85,188 @@ namespace TimeTracker_server.Controllers
       }
 
       return roleList.Distinct().ToList();
+    }
+
+    // POST: api/auth/login
+    [HttpPost("login")]
+    public async Task<ActionResult<User>> LoginUser(LoginRequest request)
+    {
+      var email = request.email;
+      var password = request.password;
+
+      var user = await _context.Users.FirstOrDefaultAsync(x => x.email == email);
+
+      if (user == null)
+      {
+        return NotFound();
+      }
+      else
+      {
+        if (user.status == "Invited")
+        {
+          return StatusCode(405);
+        }
+        if (user.password == password)
+        {
+          if (user.status == "Locked")
+          {
+            return StatusCode(403);
+          }
+        }
+        else
+        {
+          return NotFound();
+        }
+      }
+
+
+      return user;
+    }
+
+    // POST: api/auth/signup
+    [HttpPost("signup")]
+    public async Task<ActionResult<User>> SignupUser(SignupRequest request)
+    {
+      var email = request.email;
+
+      bool isExist = await _context.Users.AnyAsync(e => e.email == email);
+
+
+      if (isExist == true)
+      {
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.email == email);
+        if (user.status == "Invited")
+        {
+          user.firstName = request.firstName;
+          user.lastName = request.lastName;
+          user.password = request.password;
+          user.update_timestamp = DateTime.UtcNow;
+          user.status = "Active";
+
+          _context.Entry(user).State = EntityState.Modified;
+          await _context.SaveChangesAsync();
+
+          return user;
+        }
+        else
+        {
+          return StatusCode(404);
+        }
+      }
+      else
+      {
+        var user = new User();
+        user.email = email;
+        user.firstName = request.firstName;
+        user.lastName = request.lastName;
+        user.password = request.password;
+        user.create_timestamp = DateTime.UtcNow;
+        user.update_timestamp = DateTime.UtcNow;
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return user;
+      }
+    }
+
+    // PUT: api/auth/update-profile
+    [HttpPut("update-profile")]
+    public async Task<ActionResult<User>> UpdateProfile(User user)
+    {
+      _context.Entry(user).State = EntityState.Modified;
+
+      try
+      {
+        await _context.SaveChangesAsync();
+      }
+      catch (DbUpdateConcurrencyException)
+      {
+        if (!UserExists(user.id))
+        {
+          return NotFound();
+        }
+        else
+        {
+          throw;
+        }
+      }
+
+      return user;
+    }
+
+    // POST: api/auth/forgot-password
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<User>> RequestForgotPassword(User userBody)
+    {
+      var email = userBody.email;
+      var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email));
+      if (user == null)
+      {
+        return BadRequest(new { message = "There are no accounts linked to this email!" });
+      }
+
+      try
+      {
+        var token = TokenService.GenerateWebToken(
+          new ClaimsIdentity(new Claim[]
+          {
+            new Claim("emailAdress", user.email),
+            new Claim("type", "forgot_password"),
+            new Claim("id", user.id.ToString()),
+          })
+        );
+
+        using StreamReader sr = new StreamReader("EmailTemplates/ForgotPassword.html");
+        string body = sr.ReadToEnd().Replace("{full_name}", user.firstName + user.lastName).Replace("{token}", token);
+        await EmailService.SendEmail(email, "Forgot Password Request", body);
+      }
+      catch (Exception ex)
+      {
+        throw ex;
+      }
+      return user;
+    }
+
+    // POST: api/auth/reset-password
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<User>> ResetPassword(ResetPasswordRequest request)
+    {
+      try
+      {
+        var password = request.password;
+        var token = request.token;
+        var tokenUser = TokenService.ReadWebToken(token);
+        var id = tokenUser.FindFirst(claim => claim.Type == "id").Value;
+        var user = await _context.Users.FirstOrDefaultAsync(x => (x.id.ToString() == id));
+
+        if (user == null)
+        {
+          return NotFound();
+        }
+
+        user.password = password;
+        _context.Entry(user).State = EntityState.Modified;
+
+        try
+        {
+          await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+          throw;
+        }
+
+      }
+      catch (Exception ex)
+      {
+        throw ex;
+      }
+      return NoContent();
+    }
+    private bool UserExists(long id)
+    {
+      return _context.Users.Any(e => e.id == id);
     }
   }
 }
