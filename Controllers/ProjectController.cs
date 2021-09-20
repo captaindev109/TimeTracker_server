@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker_server.Models;
 using TimeTracker_server.Data;
+using DataContracts.RequestBody;
 
 namespace TimeTracker_server.Controllers
 {
@@ -28,11 +29,45 @@ namespace TimeTracker_server.Controllers
       return await _context.Projects.ToListAsync();
     }
 
-    // GET: api/Project/company/{companyId}/user/{userId}
-    [HttpGet("company/{companyId}/user/{userId}")]
-    public async Task<ActionResult<IEnumerable<Project>>> GetProjects(long companyId, long userId)
+    // POST: api/Project/with-roles
+    [HttpPost("with-roles")]
+    public async Task<ActionResult<IEnumerable<Project>>> GetProjectsWithRoles(DataWithRolesRequest request)
     {
-      return await _context.Projects.ToListAsync();
+      var companyId = request.companyId;
+      var userId = request.userId;
+      List<string> roles = request.userRoles;
+
+      var projectIds = new List<long>();
+      if (roles.Contains("company_admin") || roles.Contains("company_controller"))
+      {
+        var tmpProjectIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+        projectIds.AddRange(tmpProjectIds);
+      }
+      else if (roles.Contains("project_manager") || roles.Contains("project_assistant"))
+      {
+        var tmpProjectIds = await _context.UserAcls.Where(x => (x.role == "project_manager" || x.role == "project_assistant") && x.sourceType == "user" && x.sourceId == userId && x.objectType == "project").Select(x => x.objectId).ToListAsync();
+        projectIds.AddRange(tmpProjectIds);
+      }
+      else if (roles.Contains("team_lead") || roles.Contains("worker"))
+      {
+        var teamIds = await _context.UserAcls.Where(x => (x.role == "team_lead" || x.role == "worker") && x.sourceType == "user" && x.sourceId == userId && x.objectType == "team").Select(x => x.objectId).ToListAsync();
+        var tmpProjectIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "assigned_in" && x.objectType == "team" && teamIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
+        projectIds.AddRange(tmpProjectIds);
+      }
+
+      var allProjects = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var companyPublicProjectIds = await _context.Projects.Where(x => x.publicStatus == "Company_Search" && allProjects.Contains(x.id)).Select(x => x.id).ToListAsync();
+
+      foreach (var id in companyPublicProjectIds)
+      {
+        if (!projectIds.Contains(id))
+        {
+          projectIds.Add(id);
+        }
+      } // public search 
+
+      var projects = await _context.Projects.Where(x => projectIds.Contains(x.id)).ToListAsync();
+      return projects;
     }
 
     // GET: api/Project/5

@@ -31,14 +31,10 @@ namespace TimeTracker_server.Controllers
     }
 
     // GET: api/auth/get-company/5
-    [HttpGet("get-company/{id}")]
-    public async Task<ActionResult<IEnumerable<Company>>> SelectCompany(long id)
+    [HttpGet("get-company/{userId}")]
+    public async Task<ActionResult<IEnumerable<Company>>> SelectCompany(long userId)
     {
-      //SELECT DISTINCT "objectId" FROM public."UserAcls" WHERE "objectType"='company' AND (
-      //CONCAT("sourceId", "sourceType")=ANY(SELECT DISTINCT CONCAT("objectId", "objectType") 
-      // FROM public."UserAcls" WHERE "sourceId" = 1 AND "sourceType" = 'user') OR ("sourceId"=1 AND "sourceType"='user'))
-
-      var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == id && x.sourceType == "user").ToListAsync();
+      var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user").ToListAsync();
 
       var companyAcls = new List<long>();
       foreach (var acl in filteredAcls)
@@ -49,7 +45,7 @@ namespace TimeTracker_server.Controllers
         }
         else
         {
-          var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company").FirstAsync();
+          var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company").FirstOrDefaultAsync();
           companyAcls.Add(relatedAcl.objectId);
         }
       }
@@ -63,5 +59,31 @@ namespace TimeTracker_server.Controllers
       return filteredCompanies;
     }
 
+    // GET: api/auth/get-roles/use/5/company/4
+    [HttpGet("get-roles/user/{userId}/company/{companyId}")]
+    public async Task<ActionResult<List<string>>> getRoles(long userId, long companyId)
+    {
+
+      var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user").ToListAsync();
+
+      var roleList = new List<string>();
+      foreach (var acl in filteredAcls)
+      {
+        if (acl.objectType == "company" && acl.objectId == companyId)
+        {
+          roleList.Add(acl.role);
+        }
+        else
+        {
+          var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company" && x.objectId == companyId).FirstOrDefaultAsync();
+          if (relatedAcl != null)
+          {
+            roleList.Add(acl.role);
+          }
+        }
+      }
+
+      return roleList.Distinct().ToList();
+    }
   }
 }
