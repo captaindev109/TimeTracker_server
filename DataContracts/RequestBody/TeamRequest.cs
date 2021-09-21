@@ -9,5 +9,14 @@ namespace DataContracts.RequestBody
   {
     public Team team { get; set; }
     public long companyId { get; set; }
+    public List<long> teamLeads { get; set; }
+    public List<long> members { get; set; }
+  }
+
+  public class UpdateTeamRequest
+  {
+    public Team team { get; set; }
+    public List<long> teamLeads { get; set; }
+    public List<long> members { get; set; }
   }
 }

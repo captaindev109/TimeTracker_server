@@ -9,5 +9,8 @@ namespace DataContracts.RequestBody
   {
     public Project project { get; set; }
     public bool isEditable { get; set; }
+    public List<User> projectManagers { get; set; }
+    public List<User> projectManagerAssistants { get; set; }
+    public List<Team> teams { get; set; }
   }
 }

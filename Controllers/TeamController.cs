@@ -69,6 +69,12 @@ namespace TimeTracker_server.Controllers
         teamItem.team = item;
         teamItem.isEditable = isEditable;
 
+        var teamLeadAcls = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role == "team_lead" && x.objectId == item.id && x.objectType == "team").Select(x => x.sourceId).ToListAsync();
+        teamItem.teamLeads = await _context.Users.Where(x => teamLeadAcls.Contains(x.id)).ToListAsync();
+
+        var memberAcls = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role == "worker" && x.objectId == item.id && x.objectType == "team").Select(x => x.sourceId).ToListAsync();
+        teamItem.members = await _context.Users.Where(x => memberAcls.Contains(x.id)).ToListAsync();
+
         resTeams.Add(teamItem);
       }
 
@@ -92,14 +98,50 @@ namespace TimeTracker_server.Controllers
     // PUT: api/Team/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutTeam(long id, Team team)
+    public async Task<IActionResult> PutTeam(long id, UpdateTeamRequest request)
     {
+      var team = request.team;
+      var teamLeads = request.teamLeads;
+      var members = request.members;
+
       if (id != team.id)
       {
         return BadRequest();
       }
 
       _context.Entry(team).State = EntityState.Modified;
+
+      var oldAcls = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "team_lead" || x.role == "worker") && x.objectId == team.id && x.objectType == "team").ToListAsync();
+
+      _context.UserAcls.RemoveRange(oldAcls);
+
+      foreach (var userId in teamLeads)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "team_lead";
+        newAcl.objectId = team.id;
+        newAcl.objectType = "team";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
+      foreach (var userId in members)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "worker";
+        newAcl.objectId = team.id;
+        newAcl.objectType = "team";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
 
       try
       {
@@ -126,6 +168,9 @@ namespace TimeTracker_server.Controllers
     public async Task<ActionResult<Team>> PostTeam(CreateTeamRequest request)
     {
       var companyId = request.companyId;
+      var teamLeads = request.teamLeads;
+      var members = request.members;
+
       var team = request.team;
       team.create_timestamp = DateTime.UtcNow;
       team.update_timestamp = DateTime.UtcNow;
@@ -143,6 +188,35 @@ namespace TimeTracker_server.Controllers
       userAcl.create_timestamp = DateTime.UtcNow;
       userAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(userAcl);
+
+      foreach (var userId in teamLeads)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "team_lead";
+        newAcl.objectId = createdTeamId;
+        newAcl.objectType = "team";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
+      foreach (var userId in members)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "worker";
+        newAcl.objectId = createdTeamId;
+        newAcl.objectType = "team";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
       await _context.SaveChangesAsync();
       return team;
     }
@@ -158,6 +232,15 @@ namespace TimeTracker_server.Controllers
       }
 
       _context.Teams.Remove(team);
+
+      var oldAcls = await _context.UserAcls.Where(x =>
+       (x.objectType == "company" && x.role == "created_in" && x.sourceId == id && x.sourceType == "team")
+    || (x.sourceType == "user" && (x.role == "team_lead" || x.role == "worker") && x.objectId == id && x.objectType == "team")
+    || (x.sourceType == "project" && x.role == "assigned_in" && x.sourceId == id && x.objectType == "team")
+     ).ToListAsync();
+
+      _context.UserAcls.RemoveRange(oldAcls);
+
       await _context.SaveChangesAsync();
 
       return NoContent();

@@ -9,5 +9,7 @@ namespace DataContracts.RequestBody
   {
     public Team team { get; set; }
     public bool isEditable { get; set; }
+    public List<User> teamLeads { get; set; }
+    public List<User> members { get; set; }
   }
 }

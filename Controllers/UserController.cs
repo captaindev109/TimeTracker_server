@@ -225,5 +225,21 @@ namespace TimeTracker_server.Controllers
       }
       return NoContent();
     }
+
+    // GET: api/User/company/{companyId}
+    [HttpGet("company/{companyId}")]
+    public async Task<ActionResult<IEnumerable<User>>> GetUsersOfCompany(long companyId)
+    {
+      var userIds = new List<long>();
+
+      var companyOwnerIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "company_admin" || x.role == "controller") && x.objectId == companyId).Select(x => x.sourceId).ToListAsync();
+      var teamAndProjectIds = await _context.UserAcls.Where(x => (x.sourceType == "project" || x.sourceType == "team") && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var teamProjectUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "worker" || x.role == "team_lead" || x.role == "project_manager" || x.role == "project_assistant") && (x.objectType == "team" || x.objectType == "project") && teamAndProjectIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
+      userIds.AddRange(companyOwnerIds);
+      userIds.AddRange(teamProjectUserIds);
+
+      var resUsers = await _context.Users.Where(x => userIds.Contains(x.id)).ToListAsync();
+      return resUsers;
+    }
   }
 }

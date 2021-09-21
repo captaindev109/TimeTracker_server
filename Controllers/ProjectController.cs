@@ -83,6 +83,15 @@ namespace TimeTracker_server.Controllers
         projectItem.project = item;
         projectItem.isEditable = isEditable;
 
+        var projectMangerAcls = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role == "project_manager" && x.objectId == item.id && x.objectType == "project").Select(x => x.sourceId).ToListAsync();
+        projectItem.projectManagers = await _context.Users.Where(x => projectMangerAcls.Contains(x.id)).ToListAsync();
+
+        var projectMangerAssistantAcls = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role == "project_assistant" && x.objectId == item.id && x.objectType == "project").Select(x => x.sourceId).ToListAsync();
+        projectItem.projectManagerAssistants = await _context.Users.Where(x => projectMangerAssistantAcls.Contains(x.id)).ToListAsync();
+
+        var teamAcls = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "assigned_in" && x.sourceId == item.id && x.objectType == "team").Select(x => x.objectId).ToListAsync();
+        projectItem.teams = await _context.Teams.Where(x => teamAcls.Contains(x.id)).ToListAsync();
+
         resProjects.Add(projectItem);
       }
 
@@ -106,14 +115,69 @@ namespace TimeTracker_server.Controllers
     // PUT: api/Project/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutProject(long id, Project project)
+    public async Task<IActionResult> PutProject(long id, UpdateProjectRequest request)
     {
+      var project = request.project;
+      var projectManagers = request.projectManagers;
+      var projectManagerAssistants = request.projectManagerAssistants;
+      var teams = request.teams;
+
       if (id != project.id)
       {
         return BadRequest();
       }
 
       _context.Entry(project).State = EntityState.Modified;
+
+      var oldAcls = await _context.UserAcls.Where(x =>
+      (x.sourceType == "user" && x.role == "project_manager" && x.objectId == project.id && x.objectType == "project")
+    || (x.sourceType == "user" && x.role == "project_assistant" && x.objectId == project.id && x.objectType == "project")
+    || (x.sourceType == "project" && x.role == "assigned_in" && x.sourceId == project.id && x.objectType == "team")
+      ).ToListAsync();
+
+      _context.UserAcls.RemoveRange(oldAcls);
+
+      foreach (var userId in projectManagers)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "project_manager";
+        newAcl.objectId = project.id;
+        newAcl.objectType = "project";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
+      foreach (var userId in projectManagerAssistants)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "project_assistant";
+        newAcl.objectId = project.id;
+        newAcl.objectType = "project";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
+      foreach (var teamId in teams)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = project.id;
+        newAcl.sourceType = "project";
+        newAcl.role = "assigned_in";
+        newAcl.objectId = teamId;
+        newAcl.objectType = "team";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
 
       try
       {
@@ -140,6 +204,10 @@ namespace TimeTracker_server.Controllers
     public async Task<ActionResult<Project>> PostProject(CreateProjectRequest request)
     {
       var companyId = request.companyId;
+      var projectManagers = request.projectManagers;
+      var projectManagerAssistants = request.projectManagerAssistants;
+      var teams = request.teams;
+
       var project = request.project;
       project.create_timestamp = DateTime.UtcNow;
       project.update_timestamp = DateTime.UtcNow;
@@ -157,6 +225,49 @@ namespace TimeTracker_server.Controllers
       userAcl.create_timestamp = DateTime.UtcNow;
       userAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(userAcl);
+
+      foreach (var userId in projectManagers)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "project_manager";
+        newAcl.objectId = createdProjectId;
+        newAcl.objectType = "project";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
+      foreach (var userId in projectManagerAssistants)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = userId;
+        newAcl.sourceType = "user";
+        newAcl.role = "project_assistant";
+        newAcl.objectId = createdProjectId;
+        newAcl.objectType = "project";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
+      foreach (var teamId in teams)
+      {
+        var newAcl = new UserAcl();
+        newAcl.sourceId = createdProjectId;
+        newAcl.sourceType = "project";
+        newAcl.role = "assigned_in";
+        newAcl.objectId = teamId;
+        newAcl.objectType = "team";
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.update_timestamp = DateTime.UtcNow;
+
+        _context.UserAcls.Add(newAcl);
+      }
+
       await _context.SaveChangesAsync();
       return project;
     }
@@ -172,6 +283,15 @@ namespace TimeTracker_server.Controllers
       }
 
       _context.Projects.Remove(project);
+
+      var oldAcls = await _context.UserAcls.Where(x =>
+       (x.objectType == "company" && x.role == "created_in" && x.sourceId == project.id && x.sourceType == "project")
+    || (x.sourceType == "user" && (x.role == "project_manager" || x.role == "project_assistant") && x.objectId == project.id && x.objectType == "project")
+    || (x.sourceType == "project" && x.role == "assigned_in" && x.sourceId == project.id && x.objectType == "team")
+     ).ToListAsync();
+
+      _context.UserAcls.RemoveRange(oldAcls);
+
       await _context.SaveChangesAsync();
 
       return NoContent();
