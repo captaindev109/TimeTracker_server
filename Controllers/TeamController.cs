@@ -28,6 +28,7 @@ namespace TimeTracker_server.Controllers
     {
       return await _context.Teams.ToListAsync();
     }
+    
     // POST: api/Team/with-roles
     [HttpPost("with-roles")]
     public async Task<ActionResult<IEnumerable<TeamWithRoleResponse>>> GetProjectsWithRoles(DataWithRolesRequest request)

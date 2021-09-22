@@ -9,12 +9,6 @@ namespace TimeTracker_server.Models
     public string title { get; set; }
     public string description { get; set; }
     public string status { get; set; }
-    public List<string> tags { get; set; }
-    public long project { get; set; }
-    public long company { get; set; }
-    public long start { get; set; }
-    public long end { get; set; }
-    public long duration { get; set; }
     public long createdBy { get; set; }
     public long updatedBy { get; set; }
     public DateTime create_timestamp { get; set; }

@@ -44,12 +44,13 @@ namespace TimeTracker_server.Controllers
       {
         var tmpProjectIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
         projectIds.AddRange(tmpProjectIds);
+        editableProjectIds.AddRange(tmpProjectIds);
       }
       else if (roles.Contains("project_manager") || roles.Contains("project_assistant"))
       {
         var tmpProjectIds = await _context.UserAcls.Where(x => (x.role == "project_manager" || x.role == "project_assistant") && x.sourceType == "user" && x.sourceId == userId && x.objectType == "project").Select(x => x.objectId).ToListAsync();
         projectIds.AddRange(tmpProjectIds);
-        editableProjectIds = tmpProjectIds;
+        editableProjectIds.AddRange(tmpProjectIds);
       }
       else if (roles.Contains("team_lead") || roles.Contains("worker"))
       {
@@ -118,6 +119,7 @@ namespace TimeTracker_server.Controllers
     public async Task<IActionResult> PutProject(long id, UpdateProjectRequest request)
     {
       var project = request.project;
+      project.update_timestamp = DateTime.UtcNow;
       var projectManagers = request.projectManagers;
       var projectManagerAssistants = request.projectManagerAssistants;
       var teams = request.teams;

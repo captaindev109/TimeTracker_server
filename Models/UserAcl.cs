@@ -13,21 +13,4 @@ namespace TimeTracker_server.Models
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }
-
-  public enum UserRoleEnum
-  {
-    company_admin,
-    controller,
-    project_manager,
-    assist_project_manager,
-    team_lead,
-    worker,
-  }
-
-  public enum ObjectType
-  {
-    company,
-    project,
-    team,
-  }
 }
