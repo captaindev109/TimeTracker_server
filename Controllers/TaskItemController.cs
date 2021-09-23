@@ -60,19 +60,6 @@ namespace TimeTracker_server.Controllers
       }
       _context.Entry(taskItem).State = EntityState.Modified;
 
-      var oldAcl = await _context.UserAcls.Where(x => x.sourceType == "taskItem" && x.role == "created_in" && x.objectId == projectId && x.objectType == "project").FirstOrDefaultAsync();
-      _context.UserAcls.Remove(oldAcl);
-
-      var userAcl = new UserAcl();
-      userAcl.sourceId = taskItem.id;
-      userAcl.sourceType = "taskItem";
-      userAcl.role = "created_in";
-      userAcl.objectId = projectId;
-      userAcl.objectType = "project";
-      userAcl.create_timestamp = DateTime.UtcNow;
-      userAcl.update_timestamp = DateTime.UtcNow;
-      _context.UserAcls.Add(userAcl);
-
       try
       {
         await _context.SaveChangesAsync();

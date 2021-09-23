@@ -16,5 +16,7 @@ namespace TimeTracker_server.Data
     public DbSet<TimeTable> TimeTables { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserAcl> UserAcls { get; set; }
+    public DbSet<Tag> Tags { get; set; }
+    public DbSet<TagAcl> TagAcls { get; set; }
   }
 }
