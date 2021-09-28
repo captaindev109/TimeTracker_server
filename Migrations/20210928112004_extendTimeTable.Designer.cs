@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TimeTracker_server.Data;
@@ -9,9 +10,10 @@ using TimeTracker_server.Data;
 namespace TimeTracker_server.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210928112004_extendTimeTable")]
+    partial class extendTimeTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,33 +205,6 @@ namespace TimeTracker_server.Migrations
                     b.HasKey("id");
 
                     b.ToTable("TaskItems");
-                });
-
-            modelBuilder.Entity("TimeTracker_server.Models.TaskItemAcl", b =>
-                {
-                    b.Property<long>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long>("companyId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("create_timestamp")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<long>("taskItemId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("update_timestamp")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<long>("userId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("id");
-
-                    b.ToTable("TaskItemAcls");
                 });
 
             modelBuilder.Entity("TimeTracker_server.Models.TaskType", b =>

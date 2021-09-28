@@ -16,4 +16,11 @@ namespace DataContracts.RequestBody
     public TaskItem taskItem { get; set; }
     public long projectId { get; set; }
   }
+
+  public class GetBacklogTaskItemRequest
+  {
+    public long userId { get; set; }
+    public long companyId { get; set; }
+    public List<long> taskItemIds { get; set; }
+  }
 }

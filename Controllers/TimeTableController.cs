@@ -69,8 +69,7 @@ namespace TimeTracker_server.Controllers
       var taskItems = request.taskItems;
       var currentWeek = request.currentWeek;
 
-      // var timeTables = await _context.TimeTables.Where(x => taskItems.Contains(x.taskItem) && (x.end == null || x.end <= currentTime.)).ToListAsync();
-      var timeTables = await _context.TimeTables.Where(x => taskItems.Contains(x.taskItem)).ToListAsync();
+      var timeTables = await _context.TimeTables.Where(x => taskItems.Contains(x.taskItem) && x.end != -1).ToListAsync();
 
       var res = new List<WeekTimeTableResponse>();
 
@@ -89,9 +88,12 @@ namespace TimeTracker_server.Controllers
             weekLogs.Add(tableItem);
           }
         }
-        item.weekLogs = weekLogs;
+        if (weekLogs.Count > 0)
+        {
+          item.weekLogs = weekLogs;
+          res.Add(item);
+        }
 
-        res.Add(item);
       }
 
       return res;

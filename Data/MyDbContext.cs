@@ -18,5 +18,6 @@ namespace TimeTracker_server.Data
     public DbSet<UserAcl> UserAcls { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<TagAcl> TagAcls { get; set; }
+    public DbSet<TaskItemAcl> TaskItemAcls { get; set; }
   }
 }

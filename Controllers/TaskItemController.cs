@@ -120,6 +120,9 @@ namespace TimeTracker_server.Controllers
       var oldAcl = await _context.UserAcls.Where(x => x.sourceType == "taskItem" && x.role == "created_in" && x.sourceId == id && x.objectType == "project").FirstOrDefaultAsync();
       _context.UserAcls.Remove(oldAcl);
 
+      var oldTaskItemAcl = await _context.TaskItemAcls.Where(x => x.taskItemId == id).ToListAsync();
+      _context.TaskItemAcls.RemoveRange(oldTaskItemAcl);
+
       _context.TaskItems.Remove(taskItem);
       await _context.SaveChangesAsync();
 
@@ -185,6 +188,43 @@ namespace TimeTracker_server.Controllers
       }
 
       return resTaskItems;
+    }
+
+    // POST: api/TaskItem/setBacklog
+    [HttpPost("setBacklog")]
+    public async Task<ActionResult<TaskItem>> setBacklogTaskItem(GetBacklogTaskItemRequest request)
+    {
+      var userId = request.userId;
+      var companyId = request.companyId;
+      var taskItemIds = request.taskItemIds;
+
+      var oldAcls = await _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId).ToListAsync();
+      _context.TaskItemAcls.RemoveRange(oldAcls);
+      await _context.SaveChangesAsync();
+
+      foreach (var taskItemId in taskItemIds)
+      {
+        var taskItemAcl = new TaskItemAcl();
+        taskItemAcl.userId = userId;
+        taskItemAcl.companyId = companyId;
+        taskItemAcl.taskItemId = taskItemId;
+        taskItemAcl.create_timestamp = DateTime.UtcNow;
+        taskItemAcl.update_timestamp = DateTime.UtcNow;
+        _context.TaskItemAcls.Add(taskItemAcl);
+      }
+
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
+
+    // GET: api/TaskItem/getBacklog/userId/5/companyId/4
+    [HttpGet("getBacklog/userId/{userId}/companyId/{companyId}")]
+    public async Task<IEnumerable<long>> getBacklogTaskItem(long userId, long companyId)
+    {
+      var backlogItemIds = await _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId).Select(x => x.taskItemId).ToListAsync();
+
+      return backlogItemIds;
     }
   }
 }
