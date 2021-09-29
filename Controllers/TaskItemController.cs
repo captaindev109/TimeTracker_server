@@ -226,5 +226,103 @@ namespace TimeTracker_server.Controllers
 
       return backlogItemIds;
     }
+
+    // POST: api/TaskItem/startTracking
+    [HttpPost("startTracking")]
+    public async Task<ActionResult<TaskItem>> startTrackingTaskItem(StartTrackingTaskItemRequest request)
+    {
+      var taskItemId = request.taskItemId;
+      var start = request.start;
+      var userId = request.userId;
+
+      var taskItem = await _context.TaskItems.FindAsync(taskItemId);
+      taskItem.update_timestamp = DateTime.UtcNow;
+      taskItem.updatedBy = userId;
+      taskItem.status = "Progress";
+      _context.Entry(taskItem).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      var timeTable = new TimeTable();
+      timeTable.taskItem = taskItemId;
+      timeTable.date = DateTime.UtcNow;
+      timeTable.start = start;
+      timeTable.end = -1;
+      timeTable.pauseStart = -1;
+      _context.TimeTables.Add(timeTable);
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
+
+    // POST: api/TaskItem/5/getProgressLog
+    [HttpGet("{id}/getProgressLog")]
+    public async Task<ActionResult<TimeTable>> getTaskItemProgressLog(long id)
+    {
+      var progressLog = await _context.TimeTables.Where(x => x.taskItem == id && x.end == -1).FirstOrDefaultAsync();
+
+      return progressLog;
+    }
+
+    // POST: api/TaskItem/pauseTracking
+    [HttpPost("pauseTracking")]
+    public async Task<ActionResult<TaskItem>> pauseTrackingTaskItem(ActionTrackingTaskItemRequest request)
+    {
+      var taskItemId = request.taskItemId;
+      var timeTableId = request.timeTableId;
+      var currentTime = request.currentTime;
+
+      var curTimeTable = await _context.TimeTables.FindAsync(timeTableId);
+      curTimeTable.pauseStart = currentTime;
+
+      _context.Entry(curTimeTable).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
+
+    // POST: api/TaskItem/restartTracking
+    [HttpPost("restartTracking")]
+    public async Task<ActionResult<TaskItem>> restartTrackingTaskItem(ActionTrackingTaskItemRequest request)
+    {
+      var taskItemId = request.taskItemId;
+      var timeTableId = request.timeTableId;
+      var currentTime = request.currentTime;
+
+      var curTimeTable = await _context.TimeTables.FindAsync(timeTableId);
+      curTimeTable.pauseDuration += (currentTime - curTimeTable.pauseStart);
+      curTimeTable.pauseStart = -1;
+
+      _context.Entry(curTimeTable).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+      return NoContent();
+    }
+
+    // POST: api/TaskItem/stopTracking
+    [HttpPost("stopTracking")]
+    public async Task<ActionResult<TaskItem>> stopTrackingTaskItem(ActionTrackingTaskItemRequest request)
+    {
+      var taskItemId = request.taskItemId;
+      var timeTableId = request.timeTableId;
+      var currentTime = request.currentTime;
+
+      var curTimeTable = await _context.TimeTables.FindAsync(timeTableId);
+      if (curTimeTable.pauseStart != -1)
+      {
+        curTimeTable.pauseDuration += (currentTime - curTimeTable.pauseStart);
+        curTimeTable.pauseStart = -1;
+      }
+      curTimeTable.end = currentTime;
+
+      _context.Entry(curTimeTable).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+
+      var curTaskItem = await _context.TaskItems.FindAsync(taskItemId);
+      curTaskItem.status = "Active";
+      curTaskItem.update_timestamp = DateTime.UtcNow;
+
+      _context.Entry(curTaskItem).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+      return NoContent();
+    }
   }
 }

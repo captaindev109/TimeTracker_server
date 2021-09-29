@@ -23,4 +23,18 @@ namespace DataContracts.RequestBody
     public long companyId { get; set; }
     public List<long> taskItemIds { get; set; }
   }
+
+  public class StartTrackingTaskItemRequest
+  {
+    public long taskItemId { get; set; }
+    public long start { get; set; }
+    public long userId { get; set; }
+  }
+
+  public class ActionTrackingTaskItemRequest
+  {
+    public long taskItemId { get; set; }
+    public long timeTableId { get; set; }
+    public long currentTime { get; set; }
+  }
 }
