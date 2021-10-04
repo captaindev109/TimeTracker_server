@@ -192,22 +192,39 @@ namespace TimeTracker_server.Controllers
 
     // POST: api/TaskItem/setBacklog
     [HttpPost("setBacklog")]
-    public async Task<ActionResult<TaskItem>> setBacklogTaskItem(GetBacklogTaskItemRequest request)
+    public async Task<ActionResult<TaskItem>> setBacklogTaskItem(SetBacklogTaskItemRequest request)
     {
       var userId = request.userId;
       var companyId = request.companyId;
       var taskItemIds = request.taskItemIds;
 
-      var oldAcls = await _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId).ToListAsync();
-      _context.TaskItemAcls.RemoveRange(oldAcls);
+      var oldAcls = _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId);
+      var removeAcls = await oldAcls.Where(x => x.timeTableId == -1).ToListAsync();
+      _context.TaskItemAcls.RemoveRange(removeAcls);
+      await _context.SaveChangesAsync();
+
+      var needToUpdateAcls = await oldAcls.Where(x => x.status == "Active").ToListAsync();
+      var progressId = await oldAcls.Where(x => x.status == "Progress").Select(x => x.taskItemId).FirstOrDefaultAsync();
+      foreach (var activeAcl in needToUpdateAcls)
+      {
+        activeAcl.status = "Draft";
+        activeAcl.update_timestamp = DateTime.UtcNow;
+        _context.Entry(activeAcl).State = EntityState.Modified;
+      }
       await _context.SaveChangesAsync();
 
       foreach (var taskItemId in taskItemIds)
       {
+        if (progressId == taskItemId)
+        {
+          continue;
+        }
         var taskItemAcl = new TaskItemAcl();
         taskItemAcl.userId = userId;
         taskItemAcl.companyId = companyId;
         taskItemAcl.taskItemId = taskItemId;
+        taskItemAcl.timeTableId = -1;
+        taskItemAcl.status = "Active";
         taskItemAcl.create_timestamp = DateTime.UtcNow;
         taskItemAcl.update_timestamp = DateTime.UtcNow;
         _context.TaskItemAcls.Add(taskItemAcl);
@@ -222,7 +239,7 @@ namespace TimeTracker_server.Controllers
     [HttpGet("getBacklog/userId/{userId}/companyId/{companyId}")]
     public async Task<IEnumerable<long>> getBacklogTaskItem(long userId, long companyId)
     {
-      var backlogItemIds = await _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId).Select(x => x.taskItemId).ToListAsync();
+      var backlogItemIds = await _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId && x.status == "Active").Select(x => x.taskItemId).ToListAsync();
 
       return backlogItemIds;
     }
@@ -234,16 +251,9 @@ namespace TimeTracker_server.Controllers
       var taskItemId = request.taskItemId;
       var start = request.start;
       var userId = request.userId;
-
-      var taskItem = await _context.TaskItems.FindAsync(taskItemId);
-      taskItem.update_timestamp = DateTime.UtcNow;
-      taskItem.updatedBy = userId;
-      taskItem.status = "Progress";
-      _context.Entry(taskItem).State = EntityState.Modified;
-      await _context.SaveChangesAsync();
+      var companyId = request.companyId;
 
       var timeTable = new TimeTable();
-      timeTable.taskItem = taskItemId;
       timeTable.date = DateTime.UtcNow;
       timeTable.start = start;
       timeTable.end = -1;
@@ -251,14 +261,52 @@ namespace TimeTracker_server.Controllers
       _context.TimeTables.Add(timeTable);
       await _context.SaveChangesAsync();
 
+      var taskItemAcl = _context.TaskItemAcls.Where(x => x.taskItemId == taskItemId && x.companyId == companyId && x.userId == userId && x.status == "Active");
+
+      var oldTaskItemAcl = await taskItemAcl.Where(x => x.timeTableId == -1).FirstOrDefaultAsync();
+      if (oldTaskItemAcl != null)
+      {
+        oldTaskItemAcl.update_timestamp = DateTime.UtcNow;
+        oldTaskItemAcl.status = "Progress";
+        oldTaskItemAcl.timeTableId = timeTable.id;
+        _context.Entry(oldTaskItemAcl).State = EntityState.Modified;
+        await _context.SaveChangesAsync();
+        return NoContent();
+      }
+
+      var draftTaskItemAcl = await taskItemAcl.Where(x => x.timeTableId != -1).FirstOrDefaultAsync();
+      if (draftTaskItemAcl != null)
+      {
+        draftTaskItemAcl.update_timestamp = DateTime.UtcNow;
+        draftTaskItemAcl.status = "Draft";
+        _context.Entry(draftTaskItemAcl).State = EntityState.Modified;
+        // await _context.SaveChangesAsync();
+
+        var newAcl = new TaskItemAcl();
+        newAcl.taskItemId = taskItemId;
+        newAcl.userId = userId;
+        newAcl.companyId = companyId;
+        newAcl.update_timestamp = DateTime.UtcNow;
+        newAcl.create_timestamp = DateTime.UtcNow;
+        newAcl.status = "Progress";
+        newAcl.timeTableId = timeTable.id;
+        _context.TaskItemAcls.Add(newAcl);
+        await _context.SaveChangesAsync();
+      }
+
       return NoContent();
     }
 
-    // POST: api/TaskItem/5/getProgressLog
-    [HttpGet("{id}/getProgressLog")]
-    public async Task<ActionResult<TimeTable>> getTaskItemProgressLog(long id)
+    // POST: api/TaskItem/getProgressLog
+    [HttpPost("getProgressLog")]
+    public async Task<ActionResult<TimeTable>> getTaskItemProgressLog(GetProgressTaskItemRequest request)
     {
-      var progressLog = await _context.TimeTables.Where(x => x.taskItem == id && x.end == -1).FirstOrDefaultAsync();
+      var userId = request.userId;
+      var companyId = request.companyId;
+      var taskItemId = request.taskItemId;
+
+      var progressTimeTableId = await _context.TaskItemAcls.Where(x => x.taskItemId == taskItemId && x.userId == userId && x.companyId == companyId && x.status == "Progress").Select(x => x.timeTableId).FirstOrDefaultAsync();
+      var progressLog = await _context.TimeTables.Where(x => x.id == progressTimeTableId && x.end == -1).FirstOrDefaultAsync();
 
       return progressLog;
     }
@@ -267,7 +315,7 @@ namespace TimeTracker_server.Controllers
     [HttpPost("pauseTracking")]
     public async Task<ActionResult<TaskItem>> pauseTrackingTaskItem(ActionTrackingTaskItemRequest request)
     {
-      var taskItemId = request.taskItemId;
+      // var taskItemId = request.taskItemId;
       var timeTableId = request.timeTableId;
       var currentTime = request.currentTime;
 
@@ -284,7 +332,7 @@ namespace TimeTracker_server.Controllers
     [HttpPost("restartTracking")]
     public async Task<ActionResult<TaskItem>> restartTrackingTaskItem(ActionTrackingTaskItemRequest request)
     {
-      var taskItemId = request.taskItemId;
+      // var taskItemId = request.taskItemId;
       var timeTableId = request.timeTableId;
       var currentTime = request.currentTime;
 
@@ -316,13 +364,40 @@ namespace TimeTracker_server.Controllers
       _context.Entry(curTimeTable).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
-      var curTaskItem = await _context.TaskItems.FindAsync(taskItemId);
-      curTaskItem.status = "Active";
-      curTaskItem.update_timestamp = DateTime.UtcNow;
-
-      _context.Entry(curTaskItem).State = EntityState.Modified;
+      var curTaskItemAcl = await _context.TaskItemAcls.Where(x => x.taskItemId == taskItemId && x.timeTableId == timeTableId).FirstOrDefaultAsync();
+      curTaskItemAcl.status = "Active";
+      curTaskItemAcl.update_timestamp = DateTime.UtcNow;
+      _context.Entry(curTaskItemAcl).State = EntityState.Modified;
       await _context.SaveChangesAsync();
+
       return NoContent();
     }
+
+    // POST: api/TaskItem/getCurrentProgress
+    [HttpPost("getCurrentProgressItem")]
+    public async Task<ActionResult<ProgressItemResponse>> getCurrentProgressTaskItem(GetCurrentProgressTaskItemRequest request)
+    {
+      var companyId = request.companyId;
+      var userId = request.userId;
+
+      var progressItem = await _context.TaskItemAcls.Where(x => x.userId == userId && x.companyId == companyId && x.status == "Progress").FirstOrDefaultAsync();
+      if (progressItem == null)
+      {
+        return NotFound();
+      }
+      var timeTable = await _context.TimeTables.FindAsync(progressItem.timeTableId);
+      var taskItem = await _context.TaskItems.FindAsync(progressItem.taskItemId);
+
+      var createdInProjectId = await _context.UserAcls.Where(x => x.sourceType == "taskItem" && x.role == "created_in" && x.sourceId == progressItem.taskItemId && x.objectType == "project").Select(x => x.objectId).FirstOrDefaultAsync();
+      var project = await _context.Projects.FindAsync(createdInProjectId);
+
+      var progressItemRes = new ProgressItemResponse();
+      progressItemRes.taskItem = taskItem;
+      progressItemRes.timeTable = timeTable;
+      progressItemRes.project = project;
+
+      return progressItemRes;
+    }
+
   }
 }

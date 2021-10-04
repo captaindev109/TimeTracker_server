@@ -7,7 +7,15 @@ namespace DataContracts.RequestBody
 {
   public class TimeTableRequest
   {
-    public List<long> taskItems { get; set; }
+    public long userId { get; set; }
+    public long companyId { get; set; }
     public int currentWeek { get; set; }
+  }
+
+  public class GetTaskItemTimeTable
+  {
+    public long userId { get; set; }
+    public long companyId { get; set; }
+    public long taskItemId { get; set; }
   }
 }

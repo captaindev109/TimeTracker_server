@@ -17,7 +17,7 @@ namespace DataContracts.RequestBody
     public long projectId { get; set; }
   }
 
-  public class GetBacklogTaskItemRequest
+  public class SetBacklogTaskItemRequest
   {
     public long userId { get; set; }
     public long companyId { get; set; }
@@ -29,6 +29,7 @@ namespace DataContracts.RequestBody
     public long taskItemId { get; set; }
     public long start { get; set; }
     public long userId { get; set; }
+    public long companyId { get; set; }
   }
 
   public class ActionTrackingTaskItemRequest
@@ -36,5 +37,24 @@ namespace DataContracts.RequestBody
     public long taskItemId { get; set; }
     public long timeTableId { get; set; }
     public long currentTime { get; set; }
+  }
+
+  public class GetCurrentProgressTaskItemRequest
+  {
+    public long companyId { get; set; }
+    public long userId { get; set; }
+  }
+
+  public class GetToDoTaskItemRequest
+  {
+    public long companyId { get; set; }
+    public long userId { get; set; }
+  }
+
+   public class GetProgressTaskItemRequest
+  {
+    public long userId { get; set; }
+    public long companyId { get; set; }
+    public long taskItemId { get; set; }
   }
 }
