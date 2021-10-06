@@ -11,5 +11,9 @@ namespace TimeTracker_server.Models
     public long end { get; set; }
     public long pauseDuration { get; set; }
     public long pauseStart { get; set; }
+    public long taskItemId { get; set; }
+    public long userId { get; set; }
+    public long companyId { get; set; }
+    public string status { get; set; }
   }
 }

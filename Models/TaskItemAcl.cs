@@ -8,8 +8,6 @@ namespace TimeTracker_server.Models
     public long taskItemId { get; set; }
     public long userId { get; set; }
     public long companyId { get; set; }
-    public long timeTableId { get; set; }
-    public string status { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }
