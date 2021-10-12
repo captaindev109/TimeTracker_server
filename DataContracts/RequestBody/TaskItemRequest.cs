@@ -57,4 +57,10 @@ namespace DataContracts.RequestBody
     public long companyId { get; set; }
     public long taskItemId { get; set; }
   }
+
+  public class SaveCommentTaskItemRequest
+  {
+    public long timeTableId { get; set; }
+    public string comment { get; set; }
+  }
 }

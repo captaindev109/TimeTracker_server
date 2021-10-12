@@ -60,6 +60,9 @@ namespace TimeTracker_server.Controllers
       }
       _context.Entry(taskItem).State = EntityState.Modified;
 
+      var taskItmesAlcs = await _context.TaskItemAcls.Where(x => x.taskItemId == id).ToListAsync();
+      _context.TaskItemAcls.RemoveRange(taskItmesAlcs);
+
       try
       {
         await _context.SaveChangesAsync();
@@ -347,6 +350,27 @@ namespace TimeTracker_server.Controllers
 
       return progressItemRes;
     }
+
+    // POST: api/TaskItem/saveComment
+    [HttpPost("saveComment")]
+    public async Task<ActionResult<TaskItem>> saveTaskItemComment(SaveCommentTaskItemRequest request)
+    {
+      var timeTableId = request.timeTableId;
+      var comment = request.comment;
+
+      var timeTableItem = await _context.TimeTables.FindAsync(timeTableId);
+
+      if (timeTableItem == null)
+      {
+        return NotFound();
+      }
+      timeTableItem.description = comment;
+      _context.Entry(timeTableItem).State = EntityState.Modified;
+      await _context.SaveChangesAsync();
+      
+      return NoContent();
+    }
+
 
   }
 }
