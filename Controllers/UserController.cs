@@ -233,13 +233,72 @@ namespace TimeTracker_server.Controllers
       var userIds = new List<long>();
 
       var companyOwnerIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "company_admin" || x.role == "company_controller") && x.objectId == companyId).Select(x => x.sourceId).ToListAsync();
-      var teamAndProjectIds = await _context.UserAcls.Where(x => (x.sourceType == "project" || x.sourceType == "team") && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
-      var teamProjectUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "worker" || x.role == "team_lead" || x.role == "project_manager" || x.role == "project_assistant") && (x.objectType == "team" || x.objectType == "project") && teamAndProjectIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
+      var teamIds = await _context.UserAcls.Where(x => (x.sourceType == "team") && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var projectIds = await _context.UserAcls.Where(x => (x.sourceType == "project") && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var teamtUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "worker" || x.role == "team_lead") && (x.objectType == "team" || x.objectType == "project") && teamIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
+      var projectUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "project_manager" || x.role == "project_assistant") && (x.objectType == "team" || x.objectType == "project") && projectIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
       userIds.AddRange(companyOwnerIds);
-      userIds.AddRange(teamProjectUserIds);
+      userIds.AddRange(teamtUserIds);
+      userIds.AddRange(projectUserIds);
 
       var resUsers = await _context.Users.Where(x => userIds.Contains(x.id)).ToListAsync();
       return resUsers;
     }
+
+    // GET: api/User/with-roles/company/{companyId}
+    [HttpGet("with-roles/company/{companyId}")]
+    public async Task<ActionResult<IEnumerable<CompanyUserResponse>>> GetUsersWithRolesOfCompany(long companyId)
+    {
+      var userIds = new List<long>();
+
+      var companyOwnerIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "company_admin" || x.role == "company_controller") && x.objectId == companyId).Select(x => x.sourceId).ToListAsync();
+      var teamIds = await _context.UserAcls.Where(x => (x.sourceType == "team") && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var projectIds = await _context.UserAcls.Where(x => (x.sourceType == "project") && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var teamtUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "worker" || x.role == "team_lead") && (x.objectType == "team" || x.objectType == "project") && teamIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
+      var projectUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && (x.role == "project_manager" || x.role == "project_assistant") && (x.objectType == "team" || x.objectType == "project") && projectIds.Contains(x.objectId)).Select(x => x.sourceId).ToListAsync();
+      userIds.AddRange(companyOwnerIds);
+      userIds.AddRange(teamtUserIds);
+      userIds.AddRange(projectUserIds);
+
+      var companyUsers = new List<CompanyUserResponse>();
+
+      var resUsers = await _context.Users.Where(x => userIds.Contains(x.id)).ToListAsync();
+      foreach (User user in resUsers)
+      {
+        var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == user.id && x.sourceType == "user").ToListAsync();
+
+        var roleList = new List<string>();
+        foreach (var acl in filteredAcls)
+        {
+          if (acl.objectType == "company" && acl.objectId == companyId)
+          {
+            roleList.Add(acl.role);
+          }
+          else
+          {
+            var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company" && x.objectId == companyId).FirstOrDefaultAsync();
+            if (relatedAcl != null)
+            {
+              roleList.Add(acl.role);
+            }
+          }
+        }
+
+        var roles = roleList.Distinct().ToList();
+
+        var companyUser = new CompanyUserResponse();
+        companyUser.user = user;
+        companyUser.roles = roles;
+        
+        companyUsers.Add(companyUser);
+      }
+
+      return companyUsers;
+    }
+
+    // [HttpGet("{userId}/company/{companyId}/roles")]
+    // public async Task<ActionResult<IEnumerable<CompanyUserRoleResponse>>> GetUserRolesOfCompany(long userId, long companyId)
+    // {
+    // }
   }
 }
