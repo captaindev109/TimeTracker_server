@@ -148,7 +148,7 @@ namespace TimeTracker_server.Controllers
           {
             new Claim("emailAddress", email),
             new Claim("roleText", role),
-            new Claim("objectId", string.Join(",", objectId)),
+            new Claim("objectId", objectId.Count() > 0 ? string.Join(",", objectId) : ""),
             new Claim("objectType", objectType),
             new Claim("type", "invite_user"),
             new Claim("companyId", companyId),
@@ -215,11 +215,11 @@ namespace TimeTracker_server.Controllers
         roleAcl.sourceType = "user";
         roleAcl.role = role;
         roleAcl.objectId = long.Parse(companyId);
-        roleAcl.objectType = objectType;
+        roleAcl.objectType = "company";
         roleAcl.create_timestamp = DateTime.UtcNow;
         roleAcl.update_timestamp = DateTime.UtcNow;
 
-        var isRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == roleAcl.objectType);
+        var isRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == "company");
         if (isRoleExist != null)
         {
           _context.UserAcls.Add(roleAcl);
