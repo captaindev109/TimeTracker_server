@@ -126,6 +126,7 @@ namespace TimeTracker_server.Controllers
       string role = request.role;
       List<long> objectId = request.objectId;
       string objectType = request.objectType;
+      string companyId = request.companyId.ToString();
 
       bool isExist = await _context.Users.AnyAsync(e => e.email == email);
 
@@ -150,6 +151,7 @@ namespace TimeTracker_server.Controllers
             new Claim("objectId", string.Join(",", objectId)),
             new Claim("objectType", objectType),
             new Claim("type", "invite_user"),
+            new Claim("companyId", companyId),
           })
         );
         using StreamReader sr = new StreamReader("EmailTemplates/InviteUser.html");
@@ -178,6 +180,7 @@ namespace TimeTracker_server.Controllers
         var role = tokenUser.FindFirst(claim => claim.Type == "roleText").Value;
         var objectIds = tokenUser.FindFirst(claim => claim.Type == "objectId").Value;
         var objectType = tokenUser.FindFirst(claim => claim.Type == "objectType").Value;
+        var companyId = tokenUser.FindFirst(claim => claim.Type == "companyId").Value;
 
         var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email));
 
@@ -205,6 +208,21 @@ namespace TimeTracker_server.Controllers
           newAcl.update_timestamp = DateTime.UtcNow;
 
           _context.UserAcls.Add(newAcl);
+        }
+
+        var roleAcl = new UserAcl();
+        roleAcl.sourceId = user.id;
+        roleAcl.sourceType = "user";
+        roleAcl.role = role;
+        roleAcl.objectId = long.Parse(companyId);
+        roleAcl.objectType = objectType;
+        roleAcl.create_timestamp = DateTime.UtcNow;
+        roleAcl.update_timestamp = DateTime.UtcNow;
+
+        var isRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == roleAcl.objectType);
+        if (isRoleExist != null)
+        {
+          _context.UserAcls.Add(roleAcl);
         }
 
         _context.Entry(user).State = EntityState.Modified;
@@ -289,7 +307,7 @@ namespace TimeTracker_server.Controllers
         var companyUser = new CompanyUserResponse();
         companyUser.user = user;
         companyUser.roles = roles;
-        
+
         companyUsers.Add(companyUser);
       }
 
@@ -339,10 +357,10 @@ namespace TimeTracker_server.Controllers
       // var worker_teams = request.worker_teams;
 
       // var isCompanyAdmin = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "company_admin" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
-      
+
 
       // var isCompanyController = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "company_controller" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
-      
+
 
       // var teamIds = await _context.UserAcls.Where(x => x.sourceType == "team" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
       // var projectIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();

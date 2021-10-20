@@ -10,6 +10,6 @@ namespace DataContracts.RequestBody
     public List<long> objectId { get; set; }
     public string objectType { get; set; }
     public string role { get; set; }
-    public long ownerId { get; set; }
+    public long companyId { get; set; }
   }
 }
