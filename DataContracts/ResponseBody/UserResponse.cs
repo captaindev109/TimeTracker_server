@@ -16,9 +16,10 @@ namespace DataContracts.RequestBody
     public User user { get; set; }
     public Boolean is_company_admin { get; set; }
     public Boolean is_company_controller { get; set; }
-    public List<long> project_manager_projects { get; set; }
-    public List<long> project_assistant_projects { get; set; }
-    public List<long> team_lead_teams { get; set; }
-    public List<long> worker_teams { get; set; }
+    public Boolean is_project_manager { get; set; }
+    public Boolean is_project_assistant { get; set; }
+    public Boolean is_team_lead { get; set; }
+    public Boolean is_worker { get; set; }
+   
   }
 }

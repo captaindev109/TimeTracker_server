@@ -223,7 +223,7 @@ namespace TimeTracker_server.Controllers
         roleAcl.update_timestamp = DateTime.UtcNow;
 
         var isRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == "company");
-        if (isRoleExist == null)
+        if (isRoleExist == null && (role != "company_admin" && role != "company_controller"))
         {
           _context.UserAcls.Add(roleAcl);
         }
@@ -331,18 +331,17 @@ namespace TimeTracker_server.Controllers
       var isCompanyController = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "company_controller" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
       userRoles.is_company_controller = isCompanyController != null ? true : false;
 
-      var teamIds = await _context.UserAcls.Where(x => x.sourceType == "team" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
-      var projectIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var isProjectManager = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "project_manager" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      userRoles.is_project_manager = isProjectManager != null ? true : false;
 
-      var worker = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "worker" && x.objectType == "team" && teamIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
-      var team_lead = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "team_lead" && x.objectType == "team" && teamIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
-      var project_manager = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "project_manager" && x.objectType == "project" && projectIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
-      var project_assistant = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "project_assistant" && x.objectType == "project" && projectIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
+      var isProjectAssistant = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "project_assistant" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      userRoles.is_project_assistant = isProjectAssistant != null ? true : false;
 
-      userRoles.worker_teams = worker;
-      userRoles.team_lead_teams = team_lead;
-      userRoles.project_manager_projects = project_manager;
-      userRoles.project_assistant_projects = project_assistant;
+      var isTeamLead = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "team_lead" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      userRoles.is_team_lead = isProjectAssistant != null ? true : false;
+
+      var isWorker = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "worker" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      userRoles.is_worker = isWorker != null ? true : false;
 
       return userRoles;
     }
@@ -350,28 +349,26 @@ namespace TimeTracker_server.Controllers
     [HttpPost("update-roles")]
     public async Task<ActionResult<string>> UpdateUserRoles(UpdateUserRolesRequest request)
     {
-      // var userId = request.userId;
-      // var companyId = request.companyId;
-      // var is_company_admin = request.is_company_admin;
-      // var is_company_controller = request.is_company_controller;
-      // var project_manager_projects = request.project_manager_projects;
-      // var project_assistant_projects = request.project_assistant_projects;
-      // var team_lead_teams = request.team_lead_teams;
-      // var worker_teams = request.worker_teams;
-
-      // var isCompanyAdmin = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "company_admin" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      var userId = request.userId;
+      var companyId = request.companyId;
+      var roles = request.roles;
 
 
-      // var isCompanyController = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "company_controller" && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      var aclIds = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.objectId == companyId && x.objectType == "company").ToListAsync();
+      _context.UserAcls.RemoveRange(aclIds);
+      await _context.SaveChangesAsync();
 
-
-      // var teamIds = await _context.UserAcls.Where(x => x.sourceType == "team" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
-      // var projectIds = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "created_in" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
-
-      // var worker = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "worker" && x.objectType == "team" && teamIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
-      // var team_lead = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "team_lead" && x.objectType == "team" && teamIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
-      // var project_manager = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "project_manager" && x.objectType == "project" && projectIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
-      // var project_assistant = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "project_assistant" && x.objectType == "project" && projectIds.Contains(x.objectId)).Select(x => x.objectId).ToListAsync();
+      foreach (var role in roles)
+      {
+        var newRoleAcl = new UserAcl();
+        newRoleAcl.sourceId = userId;
+        newRoleAcl.sourceType = "user";
+        newRoleAcl.role = role;
+        newRoleAcl.objectId = companyId;
+        newRoleAcl.objectType = "company";
+        _context.UserAcls.Add(newRoleAcl);
+      }
+      await _context.SaveChangesAsync();
 
       return NoContent();
     }
