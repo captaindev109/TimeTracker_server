@@ -189,25 +189,28 @@ namespace TimeTracker_server.Controllers
           return NotFound("no user");
         }
 
-        foreach (var objectId in objectIds.Split(',').ToList())
+        if (objectIds != "")
         {
-          var newAcl = new UserAcl();
-          newAcl.sourceId = user.id;
-          newAcl.sourceType = "user";
-          newAcl.role = role;
-          newAcl.objectId = long.Parse(objectId);
-          newAcl.objectType = objectType;
-
-          var isExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == newAcl.sourceId && x.sourceType == "user" && x.role == newAcl.role && x.objectId == newAcl.objectId && x.objectType == newAcl.objectType);
-          if (isExist != null)
+          foreach (var objectId in objectIds.Split(',').ToList())
           {
-            break;
+            var newAcl = new UserAcl();
+            newAcl.sourceId = user.id;
+            newAcl.sourceType = "user";
+            newAcl.role = role;
+            newAcl.objectId = long.Parse(objectId);
+            newAcl.objectType = objectType;
+
+            var isExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == newAcl.sourceId && x.sourceType == "user" && x.role == newAcl.role && x.objectId == newAcl.objectId && x.objectType == newAcl.objectType);
+            if (isExist != null)
+            {
+              break;
+            }
+
+            newAcl.create_timestamp = DateTime.UtcNow;
+            newAcl.update_timestamp = DateTime.UtcNow;
+
+            _context.UserAcls.Add(newAcl);
           }
-
-          newAcl.create_timestamp = DateTime.UtcNow;
-          newAcl.update_timestamp = DateTime.UtcNow;
-
-          _context.UserAcls.Add(newAcl);
         }
 
         var roleAcl = new UserAcl();
@@ -220,7 +223,7 @@ namespace TimeTracker_server.Controllers
         roleAcl.update_timestamp = DateTime.UtcNow;
 
         var isRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == "company");
-        if (isRoleExist != null)
+        if (isRoleExist == null)
         {
           _context.UserAcls.Add(roleAcl);
         }
