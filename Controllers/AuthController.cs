@@ -35,21 +35,7 @@ namespace TimeTracker_server.Controllers
     [HttpGet("get-company/{userId}")]
     public async Task<ActionResult<IEnumerable<Company>>> SelectCompany(long userId)
     {
-      var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user").ToListAsync();
-
-      var companyAcls = new List<long>();
-      foreach (var acl in filteredAcls)
-      {
-        if (acl.objectType == "company")
-        {
-          companyAcls.Add(acl.objectId);
-        }
-        else
-        {
-          var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company").FirstOrDefaultAsync();
-          companyAcls.Add(relatedAcl.objectId);
-        }
-      }
+      var companyAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "member" && x.objectType == "company").Select(x => x.objectId).ToListAsync();
 
       var filteredCompanies = await _context.Companies.Where(x => companyAcls.Contains(x.id)).ToListAsync();
 
@@ -64,27 +50,9 @@ namespace TimeTracker_server.Controllers
     [HttpGet("get-roles/user/{userId}/company/{companyId}")]
     public async Task<ActionResult<List<string>>> getRoles(long userId, long companyId)
     {
+      var roleList = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role != "member" && x.objectType == "company" && x.objectId == companyId).Select(x => x.role).Distinct().ToListAsync();
 
-      var filteredAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user").ToListAsync();
-
-      var roleList = new List<string>();
-      foreach (var acl in filteredAcls)
-      {
-        if (acl.objectType == "company" && acl.objectId == companyId)
-        {
-          roleList.Add(acl.role);
-        }
-        else
-        {
-          var relatedAcl = await _context.UserAcls.Where(x => x.sourceType == acl.objectType && x.sourceId == acl.objectId && x.objectType == "company" && x.objectId == companyId).FirstOrDefaultAsync();
-          if (relatedAcl != null)
-          {
-            roleList.Add(acl.role);
-          }
-        }
-      }
-
-      return roleList.Distinct().ToList();
+      return roleList;
     }
 
     // POST: api/auth/login

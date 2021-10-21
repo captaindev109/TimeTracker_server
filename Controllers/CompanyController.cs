@@ -123,12 +123,32 @@ namespace TimeTracker_server.Controllers
       var userAcl = new UserAcl();
       userAcl.sourceId = userId;
       userAcl.sourceType = "user";
-      userAcl.role = "company_admin";
+      userAcl.role = "company_owner";
       userAcl.objectId = createdCompanyId;
       userAcl.objectType = "company";
       userAcl.create_timestamp = DateTime.UtcNow;
       userAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(userAcl);
+
+      var adminAcl = new UserAcl();
+      adminAcl.sourceId = userId;
+      adminAcl.sourceType = "user";
+      adminAcl.role = "company_admin";
+      adminAcl.objectId = createdCompanyId;
+      adminAcl.objectType = "company";
+      adminAcl.create_timestamp = DateTime.UtcNow;
+      adminAcl.update_timestamp = DateTime.UtcNow;
+      _context.UserAcls.Add(adminAcl);
+
+      var memberAcl = new UserAcl();
+      memberAcl.sourceId = userId;
+      memberAcl.sourceType = "user";
+      memberAcl.role = "member";
+      memberAcl.objectId = createdCompanyId;
+      memberAcl.objectType = "company";
+      memberAcl.create_timestamp = DateTime.UtcNow;
+      memberAcl.update_timestamp = DateTime.UtcNow;
+      _context.UserAcls.Add(memberAcl);
       
 
       var user = _context.Users.Find(userId);
