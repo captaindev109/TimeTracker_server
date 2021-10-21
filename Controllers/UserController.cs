@@ -197,7 +197,12 @@ namespace TimeTracker_server.Controllers
         memberAcl.objectType = "company";
         memberAcl.create_timestamp = DateTime.UtcNow;
         memberAcl.update_timestamp = DateTime.UtcNow;
-        _context.UserAcls.Add(memberAcl);
+
+        var isMemRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == memberAcl.sourceId && x.sourceType == "user" && x.role == "member" && x.objectId == memberAcl.objectId && x.objectType == "company");
+        if (isMemRoleExist == null)
+        {
+          _context.UserAcls.Add(memberAcl);
+        }
 
         if (objectIds != "")
         {
