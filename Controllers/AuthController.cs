@@ -35,7 +35,7 @@ namespace TimeTracker_server.Controllers
     [HttpGet("get-company/{userId}")]
     public async Task<ActionResult<IEnumerable<Company>>> SelectCompany(long userId)
     {
-      var companyAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role == "member" && x.objectType == "company").Select(x => x.objectId).ToListAsync();
+      var companyAcls = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role.Contains("member") && x.objectType == "company").Select(x => x.objectId).ToListAsync();
 
       var filteredCompanies = await _context.Companies.Where(x => companyAcls.Contains(x.id)).ToListAsync();
 
@@ -50,7 +50,7 @@ namespace TimeTracker_server.Controllers
     [HttpGet("get-roles/user/{userId}/company/{companyId}")]
     public async Task<ActionResult<List<string>>> getRoles(long userId, long companyId)
     {
-      var roleList = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role != "member" && x.objectType == "company" && x.objectId == companyId).Select(x => x.role).Distinct().ToListAsync();
+      var roleList = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && x.objectType == "company" && x.objectId == companyId).Select(x => x.role).Distinct().ToListAsync();
 
       return roleList;
     }

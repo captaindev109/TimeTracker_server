@@ -86,6 +86,36 @@ namespace TimeTracker_server.Controllers
       return NoContent();
     }
 
+    // POST: api/User/update-status
+    [HttpPost("update-status")]
+    public async Task<IActionResult> UpdateUserStatus(UpdateUserStatusRequest request)
+    {
+      var userId = request.userId;
+      var companyId = request.companyId;
+      var status = request.status;
+
+      var userAcl = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role.Contains("member") && x.objectId == companyId && x.objectType == "company").FirstOrDefaultAsync();
+      userAcl.role = status + "_member";
+
+      _context.Entry(userAcl).State = EntityState.Modified;
+
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
+
+    // POST: api/User/get-status
+    [HttpPost("get-status")]
+    public async Task<ActionResult<string>> getUserStatus(GetUserStatusRequest request)
+    {
+      var userId = request.userId;
+      var companyId = request.companyId;
+
+      var userAclstatus = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role.Contains("member") && x.objectId == companyId && x.objectType == "company").Select(x => x.role).FirstOrDefaultAsync();
+
+      return userAclstatus;
+    }
+
     // POST: api/User
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
@@ -192,13 +222,13 @@ namespace TimeTracker_server.Controllers
         var memberAcl = new UserAcl();
         memberAcl.sourceId = user.id;
         memberAcl.sourceType = "user";
-        memberAcl.role = "member";
+        memberAcl.role = "active_member";
         memberAcl.objectId = long.Parse(companyId);
         memberAcl.objectType = "company";
         memberAcl.create_timestamp = DateTime.UtcNow;
         memberAcl.update_timestamp = DateTime.UtcNow;
 
-        var isMemRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == memberAcl.sourceId && x.sourceType == "user" && x.role == "member" && x.objectId == memberAcl.objectId && x.objectType == "company");
+        var isMemRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == memberAcl.sourceId && x.sourceType == "user" && x.role.Contains("member") && x.objectId == memberAcl.objectId && x.objectType == "company");
         if (isMemRoleExist == null)
         {
           _context.UserAcls.Add(memberAcl);
@@ -266,7 +296,7 @@ namespace TimeTracker_server.Controllers
     [HttpGet("company/{companyId}")]
     public async Task<ActionResult<IEnumerable<User>>> GetUsersOfCompany(long companyId)
     {
-      var userIds = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role == "member" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var userIds = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role.Contains("member") && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
 
       var resUsers = await _context.Users.Where(x => userIds.Contains(x.id)).ToListAsync();
       return resUsers;
@@ -278,7 +308,7 @@ namespace TimeTracker_server.Controllers
     {
       var userIds = new List<long>();
 
-      var companyUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role == "member" && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
+      var companyUserIds = await _context.UserAcls.Where(x => x.sourceType == "user" && x.role.Contains("member") && x.objectId == companyId && x.objectType == "company").Select(x => x.sourceId).ToListAsync();
       userIds.AddRange(companyUserIds);
 
       var companyUsers = new List<CompanyUserResponse>();
@@ -286,11 +316,13 @@ namespace TimeTracker_server.Controllers
       var resUsers = await _context.Users.Where(x => userIds.Contains(x.id)).ToListAsync();
       foreach (User user in resUsers)
       {
-        var roles = await _context.UserAcls.Where(x => x.sourceId == user.id && x.sourceType == "user" && x.objectId == companyId && x.objectType == "company" && x.role != "member").Select(x => x.role).Distinct().ToListAsync();
+        var roles = await _context.UserAcls.Where(x => x.sourceId == user.id && x.sourceType == "user" && x.objectId == companyId && x.objectType == "company" && !x.role.Contains("member")).Select(x => x.role).Distinct().ToListAsync();
+        var status = await _context.UserAcls.Where(x => x.sourceId == user.id && x.sourceType == "user" && x.objectId == companyId && x.objectType == "company" && x.role.Contains("member")).Select(x => x.role).FirstOrDefaultAsync();
 
         var companyUser = new CompanyUserResponse();
         companyUser.user = user;
         companyUser.roles = roles;
+        companyUser.status = status;
 
         companyUsers.Add(companyUser);
       }
@@ -306,7 +338,7 @@ namespace TimeTracker_server.Controllers
 
       userRoles.user = user;
 
-      var companyRoles = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && x.role != "member" && x.objectId == companyId && x.objectType == "company").Select(x => x.role).Distinct().ToListAsync();
+      var companyRoles = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && x.objectId == companyId && x.objectType == "company").Select(x => x.role).Distinct().ToListAsync();
       userRoles.roles = companyRoles;
 
       return userRoles;
@@ -319,7 +351,7 @@ namespace TimeTracker_server.Controllers
       var companyId = request.companyId;
       var roles = request.roles;
 
-      var aclIds = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && (x.role != "member" && x.role != "company_owner") && x.objectId == companyId && x.objectType == "company").ToListAsync();
+      var aclIds = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && (!x.role.Contains("member") && x.role != "company_owner") && x.objectId == companyId && x.objectType == "company").ToListAsync();
       _context.UserAcls.RemoveRange(aclIds);
       await _context.SaveChangesAsync();
 

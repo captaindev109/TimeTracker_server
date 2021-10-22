@@ -143,7 +143,7 @@ namespace TimeTracker_server.Controllers
       var memberAcl = new UserAcl();
       memberAcl.sourceId = userId;
       memberAcl.sourceType = "user";
-      memberAcl.role = "member";
+      memberAcl.role = "active_member";
       memberAcl.objectId = createdCompanyId;
       memberAcl.objectType = "company";
       memberAcl.create_timestamp = DateTime.UtcNow;
