@@ -212,7 +212,7 @@ namespace TimeTracker_server.Controllers
         var objectType = tokenUser.FindFirst(claim => claim.Type == "objectType").Value;
         var companyId = tokenUser.FindFirst(claim => claim.Type == "companyId").Value;
 
-        var user = await _context.Users.FirstOrDefaultAsync(x => (x.email == email));
+        var user = await _context.Users.Where(x => (x.email == email)).FirstOrDefaultAsync();
 
         if (user == null)
         {
@@ -228,8 +228,8 @@ namespace TimeTracker_server.Controllers
         memberAcl.create_timestamp = DateTime.UtcNow;
         memberAcl.update_timestamp = DateTime.UtcNow;
 
-        var isMemRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == memberAcl.sourceId && x.sourceType == "user" && x.role.Contains("member") && x.objectId == memberAcl.objectId && x.objectType == "company");
-        if (isMemRoleExist == null)
+        var isMemRoleExist = await _context.UserAcls.AnyAsync(x => x.sourceId == memberAcl.sourceId && x.sourceType == "user" && x.role.Contains("member") && x.objectId == memberAcl.objectId && x.objectType == "company");
+        if (isMemRoleExist == false)
         {
           _context.UserAcls.Add(memberAcl);
         }
@@ -245,8 +245,8 @@ namespace TimeTracker_server.Controllers
             newAcl.objectId = long.Parse(objectId);
             newAcl.objectType = objectType;
 
-            var isExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == newAcl.sourceId && x.sourceType == "user" && x.role == newAcl.role && x.objectId == newAcl.objectId && x.objectType == newAcl.objectType);
-            if (isExist != null)
+            var isExist = await _context.UserAcls.AnyAsync(x => x.sourceId == newAcl.sourceId && x.sourceType == "user" && x.role == newAcl.role && x.objectId == newAcl.objectId && x.objectType == newAcl.objectType);
+            if (isExist == true)
             {
               break;
             }
@@ -267,13 +267,11 @@ namespace TimeTracker_server.Controllers
         roleAcl.create_timestamp = DateTime.UtcNow;
         roleAcl.update_timestamp = DateTime.UtcNow;
 
-        var isRoleExist = await _context.UserAcls.FirstOrDefaultAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == "company");
-        if (isRoleExist == null && (role != "company_admin" && role != "company_controller"))
+        var isRoleExist = await _context.UserAcls.AnyAsync(x => x.sourceId == roleAcl.sourceId && x.sourceType == "user" && x.role == roleAcl.role && x.objectId == roleAcl.objectId && x.objectType == "company");
+        if (isRoleExist == false)
         {
           _context.UserAcls.Add(roleAcl);
         }
-
-        _context.Entry(user).State = EntityState.Modified;
 
         try
         {
