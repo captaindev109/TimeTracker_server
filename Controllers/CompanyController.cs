@@ -109,6 +109,10 @@ namespace TimeTracker_server.Controllers
     {
       var companyName = request.companyName;
       var userId = request.userId;
+      bool isExist = await _context.Companies.AnyAsync(x => x.name == companyName);
+      if(isExist) {
+        return NotFound();
+      }
 
       var newCompany = new Company();
       newCompany.name = companyName;
