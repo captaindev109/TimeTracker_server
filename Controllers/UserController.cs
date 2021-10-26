@@ -58,7 +58,7 @@ namespace TimeTracker_server.Controllers
     // PUT: api/User/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutUser(long id, User user)
+    public async  Task<ActionResult<User>> PutUser(long id, User user)
     {
       if (id != user.id)
       {
@@ -82,8 +82,8 @@ namespace TimeTracker_server.Controllers
           throw;
         }
       }
-
-      return NoContent();
+      var updatedUse = await _context.Users.FindAsync(id);
+      return updatedUse;
     }
 
     // POST: api/User/update-status
