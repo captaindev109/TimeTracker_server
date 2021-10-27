@@ -57,7 +57,7 @@ namespace TimeTracker_server.Controllers
     {
 
       var tagIds = await _context.TagAcls.Where(x => x.objectType == "company" && x.objectId == companyId).Select(x => x.tagId).ToListAsync();
-      var tags = await _context.Tags.Where(x => tagIds.Contains(x.id)).ToListAsync();
+      var tags = await _context.Tags.Where(x => tagIds.Contains(x.id) && x.type == "resourceType").ToListAsync();
 
       return tags;
     }
@@ -121,6 +121,14 @@ namespace TimeTracker_server.Controllers
           tagAcl.create_timestamp = DateTime.UtcNow;
           tagAcl.update_timestamp = DateTime.UtcNow;
           _context.TagAcls.Add(tagAcl);
+
+          var tagAclCompany = new TagAcl();
+          tagAclCompany.tagId = createdTagId;
+          tagAclCompany.objectType = "company";
+          tagAclCompany.objectId = companyId;
+          tagAclCompany.create_timestamp = DateTime.UtcNow;
+          tagAclCompany.update_timestamp = DateTime.UtcNow;
+          _context.TagAcls.Add(tagAclCompany);
         }
         else
         {
