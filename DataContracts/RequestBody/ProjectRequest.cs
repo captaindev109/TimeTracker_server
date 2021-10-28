@@ -12,13 +12,16 @@ namespace DataContracts.RequestBody
     public List<long> projectManagers { get; set; }
     public List<long> projectManagerAssistants { get; set; }
     public List<long> teams { get; set; }
+    public List<string> tags { get; set; }
   }
 
   public class UpdateProjectRequest
   {
     public Project project { get; set; }
+    public long companyId { get; set; }
     public List<long> projectManagers { get; set; }
     public List<long> projectManagerAssistants { get; set; }
     public List<long> teams { get; set; }
+    public List<string> tags { get; set; }
   }
 }

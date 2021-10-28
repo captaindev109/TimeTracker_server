@@ -55,9 +55,7 @@ namespace TimeTracker_server.Controllers
     [HttpGet("tags/company/{companyId}")]
     public async Task<ActionResult<IEnumerable<Tag>>> GetResourceTypeTagsOfCompany(long companyId)
     {
-
-      var tagIds = await _context.TagAcls.Where(x => x.objectType == "company" && x.objectId == companyId).Select(x => x.tagId).ToListAsync();
-      var tags = await _context.Tags.Where(x => tagIds.Contains(x.id) && x.type == "resourceType").ToListAsync();
+      var tags = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
 
       return tags;
     }
@@ -96,8 +94,7 @@ namespace TimeTracker_server.Controllers
       _context.TagAcls.RemoveRange(tagsAcl);
       await _context.SaveChangesAsync();
 
-      var tagIds = await _context.TagAcls.Where(x => x.objectType == "company" && x.objectId == companyId).Select(x => x.tagId).ToListAsync();
-      var tagsOfCompany = await _context.Tags.Where(x => tagIds.Contains(x.id)).ToListAsync();
+      var tagsOfCompany = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
 
       foreach (var tagName in tags)
       {
@@ -106,7 +103,7 @@ namespace TimeTracker_server.Controllers
         {
           var newTag = new Tag();
           newTag.name = tagName;
-          newTag.type = "resourceType";
+          newTag.companyId = companyId;
           newTag.create_timestamp = DateTime.UtcNow;
           newTag.update_timestamp = DateTime.UtcNow;
           _context.Tags.Add(newTag);
@@ -121,14 +118,6 @@ namespace TimeTracker_server.Controllers
           tagAcl.create_timestamp = DateTime.UtcNow;
           tagAcl.update_timestamp = DateTime.UtcNow;
           _context.TagAcls.Add(tagAcl);
-
-          var tagAclCompany = new TagAcl();
-          tagAclCompany.tagId = createdTagId;
-          tagAclCompany.objectType = "company";
-          tagAclCompany.objectId = companyId;
-          tagAclCompany.create_timestamp = DateTime.UtcNow;
-          tagAclCompany.update_timestamp = DateTime.UtcNow;
-          _context.TagAcls.Add(tagAclCompany);
         }
         else
         {
@@ -188,8 +177,7 @@ namespace TimeTracker_server.Controllers
       _context.UserAcls.Add(resourceTypeAcl);
       await _context.SaveChangesAsync();
 
-      var tagIds = await _context.TagAcls.Where(x => x.objectType == "company" && x.objectId == companyId).Select(x => x.tagId).ToListAsync();
-      var tagsOfCompany = await _context.Tags.Where(x => tagIds.Contains(x.id)).ToListAsync();
+      var tagsOfCompany = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
 
       foreach (var tagName in tags)
       {
@@ -198,7 +186,7 @@ namespace TimeTracker_server.Controllers
         {
           var newTag = new Tag();
           newTag.name = tagName;
-          newTag.type = "resourceType";
+          newTag.companyId = companyId;
           newTag.create_timestamp = DateTime.UtcNow;
           newTag.update_timestamp = DateTime.UtcNow;
           _context.Tags.Add(newTag);
@@ -213,14 +201,6 @@ namespace TimeTracker_server.Controllers
           tagAcl.create_timestamp = DateTime.UtcNow;
           tagAcl.update_timestamp = DateTime.UtcNow;
           _context.TagAcls.Add(tagAcl);
-
-          var tagAclCompany = new TagAcl();
-          tagAclCompany.tagId = createdTagId;
-          tagAclCompany.objectType = "company";
-          tagAclCompany.objectId = companyId;
-          tagAclCompany.create_timestamp = DateTime.UtcNow;
-          tagAclCompany.update_timestamp = DateTime.UtcNow;
-          _context.TagAcls.Add(tagAclCompany);
         }
         else
         {

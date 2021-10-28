@@ -6,7 +6,7 @@ namespace TimeTracker_server.Models
   {
     public long id { get; set; }
     public string name { get; set; }
-    public string type { get; set; }
+    public long companyId { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }

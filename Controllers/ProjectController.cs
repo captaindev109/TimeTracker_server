@@ -93,6 +93,10 @@ namespace TimeTracker_server.Controllers
         var teamAcls = await _context.UserAcls.Where(x => x.sourceType == "project" && x.role == "assigned_in" && x.sourceId == item.id && x.objectType == "team").Select(x => x.objectId).ToListAsync();
         projectItem.teams = await _context.Teams.Where(x => teamAcls.Contains(x.id)).ToListAsync();
 
+        var tagIds = await _context.TagAcls.Where(x => x.objectId == item.id && x.objectType == "project").Select(x => x.tagId).ToListAsync();
+        var tags = await _context.Tags.Where(x => tagIds.Contains(x.id)).ToListAsync();
+        projectItem.tags = tags;
+
         resProjects.Add(projectItem);
       }
 
@@ -119,15 +123,21 @@ namespace TimeTracker_server.Controllers
     public async Task<IActionResult> PutProject(long id, UpdateProjectRequest request)
     {
       var project = request.project;
+      var companyId = request.companyId;
       project.update_timestamp = DateTime.UtcNow;
       var projectManagers = request.projectManagers;
       var projectManagerAssistants = request.projectManagerAssistants;
       var teams = request.teams;
+      var tags = request.tags;
 
       if (id != project.id)
       {
         return BadRequest();
       }
+
+      var tagsAcl = await _context.TagAcls.Where(x => x.objectId == id && x.objectType == "project").ToListAsync();
+      _context.TagAcls.RemoveRange(tagsAcl);
+      await _context.SaveChangesAsync();
 
       _context.Entry(project).State = EntityState.Modified;
 
@@ -181,6 +191,43 @@ namespace TimeTracker_server.Controllers
         _context.UserAcls.Add(newAcl);
       }
 
+      var tagsOfCompany = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
+
+      foreach (var tagName in tags)
+      {
+        var existTag = tagsOfCompany.FirstOrDefault(x => x.name == tagName);
+        if (existTag == null)
+        {
+          var newTag = new Tag();
+          newTag.name = tagName;
+          newTag.companyId = companyId;
+          newTag.create_timestamp = DateTime.UtcNow;
+          newTag.update_timestamp = DateTime.UtcNow;
+          _context.Tags.Add(newTag);
+          await _context.SaveChangesAsync();
+
+          var createdTagId = newTag.id;
+
+          var tagAcl = new TagAcl();
+          tagAcl.tagId = createdTagId;
+          tagAcl.objectType = "project";
+          tagAcl.objectId = project.id;
+          tagAcl.create_timestamp = DateTime.UtcNow;
+          tagAcl.update_timestamp = DateTime.UtcNow;
+          _context.TagAcls.Add(tagAcl);
+        }
+        else
+        {
+          var tagAcl = new TagAcl();
+          tagAcl.tagId = existTag.id;
+          tagAcl.objectType = "project";
+          tagAcl.objectId = project.id;
+          tagAcl.create_timestamp = DateTime.UtcNow;
+          tagAcl.update_timestamp = DateTime.UtcNow;
+          _context.TagAcls.Add(tagAcl);
+        }
+      }
+
       try
       {
         await _context.SaveChangesAsync();
@@ -209,6 +256,7 @@ namespace TimeTracker_server.Controllers
       var projectManagers = request.projectManagers;
       var projectManagerAssistants = request.projectManagerAssistants;
       var teams = request.teams;
+      var tags = request.tags;
 
       var project = request.project;
       project.create_timestamp = DateTime.UtcNow;
@@ -268,6 +316,43 @@ namespace TimeTracker_server.Controllers
         newAcl.update_timestamp = DateTime.UtcNow;
 
         _context.UserAcls.Add(newAcl);
+      }
+
+      var tagsOfCompany = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
+
+      foreach (var tagName in tags)
+      {
+        var existTag = tagsOfCompany.FirstOrDefault(x => x.name == tagName);
+        if (existTag == null)
+        {
+          var newTag = new Tag();
+          newTag.name = tagName;
+          newTag.companyId = companyId;
+          newTag.create_timestamp = DateTime.UtcNow;
+          newTag.update_timestamp = DateTime.UtcNow;
+          _context.Tags.Add(newTag);
+          await _context.SaveChangesAsync();
+
+          var createdTagId = newTag.id;
+
+          var tagAcl = new TagAcl();
+          tagAcl.tagId = createdTagId;
+          tagAcl.objectType = "project";
+          tagAcl.objectId = createdProjectId;
+          tagAcl.create_timestamp = DateTime.UtcNow;
+          tagAcl.update_timestamp = DateTime.UtcNow;
+          _context.TagAcls.Add(tagAcl);
+        }
+        else
+        {
+          var tagAcl = new TagAcl();
+          tagAcl.tagId = existTag.id;
+          tagAcl.objectType = "project";
+          tagAcl.objectId = createdProjectId;
+          tagAcl.create_timestamp = DateTime.UtcNow;
+          tagAcl.update_timestamp = DateTime.UtcNow;
+          _context.TagAcls.Add(tagAcl);
+        }
       }
 
       await _context.SaveChangesAsync();

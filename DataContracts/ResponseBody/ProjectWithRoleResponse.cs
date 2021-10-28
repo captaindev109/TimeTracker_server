@@ -12,5 +12,6 @@ namespace DataContracts.RequestBody
     public List<User> projectManagers { get; set; }
     public List<User> projectManagerAssistants { get; set; }
     public List<Team> teams { get; set; }
+    public List<Tag> tags { get; set; }
   }
 }
