@@ -143,7 +143,7 @@ namespace TimeTracker_server.Controllers
     {
       var companyId = request.companyId;
       var userId = request.userId;
-      List<string> roles = request.userRoles;
+      List<string> roles = getRoles(companyId, userId).Result;
 
       var editableTaskItemIds = new List<long>();
 
@@ -367,10 +367,15 @@ namespace TimeTracker_server.Controllers
       timeTableItem.description = comment;
       _context.Entry(timeTableItem).State = EntityState.Modified;
       await _context.SaveChangesAsync();
-      
+
       return NoContent();
     }
 
+    private async Task<List<string>> getRoles(long companyId, long userId)
+    {
+      var roleList = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && x.objectType == "company" && x.objectId == companyId).Select(x => x.role).Distinct().ToListAsync();
 
+      return roleList;
+    }
   }
 }

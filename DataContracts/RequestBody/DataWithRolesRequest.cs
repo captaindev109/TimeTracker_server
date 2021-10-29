@@ -8,7 +8,6 @@ namespace DataContracts.RequestBody
   {
     public long companyId { get; set; }
     public long userId { get; set; }
-    public List<string> userRoles { get; set; }
   }
 
   public class UpdateUserRolesRequest
