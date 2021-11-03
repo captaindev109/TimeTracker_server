@@ -17,4 +17,16 @@ namespace DataContracts.RequestBody
     public User user { get; set; }
     public List<string> roles { get; set; }
   }
+
+  public class UserRoleForAdminResponse
+  {
+    public User user { get; set; }
+    public List<UserRolesOfCompay> roleDetail { get; set; }
+  }
+
+  public class UserRolesOfCompay
+  {
+    public Company company { get; set; }
+    public List<string> roles { get; set; }
+  }
 }

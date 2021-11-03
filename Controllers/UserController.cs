@@ -58,7 +58,7 @@ namespace TimeTracker_server.Controllers
     // PUT: api/User/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async  Task<ActionResult<User>> PutUser(long id, User user)
+    public async Task<ActionResult<User>> PutUser(long id, User user)
     {
       if (id != user.id)
       {
@@ -338,6 +338,39 @@ namespace TimeTracker_server.Controllers
 
       var companyRoles = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && x.objectId == companyId && x.objectType == "company").Select(x => x.role).Distinct().ToListAsync();
       userRoles.roles = companyRoles;
+
+      return userRoles;
+    }
+
+    [HttpGet("{userId}/roles")]
+    public async Task<ActionResult<UserRoleForAdminResponse>> GetUserRolesForAdmin(long userId)
+    {
+      var userRoles = new UserRoleForAdminResponse();
+      var user = await _context.Users.FindAsync(userId);
+
+      userRoles.user = user;
+
+      var allCompanyRoles = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && x.objectType == "company").ToListAsync();
+
+      var roleDetail = new List<UserRolesOfCompay>();
+
+      foreach (var roleAcl in allCompanyRoles)
+      {
+        var role = new UserRolesOfCompay();
+        var detailIndex = roleDetail.FindIndex(x => x.company.id == roleAcl.objectId);
+        if (detailIndex != -1)
+        {
+          roleDetail[detailIndex].roles.Add(roleAcl.role);
+        }
+        else
+        {
+          role.company = await _context.Companies.FindAsync(roleAcl.objectId);
+          role.roles = new List<string>(new string[] {roleAcl.role});
+          roleDetail.Add(role);
+        }
+      }
+
+      userRoles.roleDetail = roleDetail;
 
       return userRoles;
     }
