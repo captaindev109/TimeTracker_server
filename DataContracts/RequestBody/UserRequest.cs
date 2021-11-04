@@ -17,4 +17,16 @@ namespace DataContracts.RequestBody
     public long companyId { get; set; }
     public long userId { get; set; }
   }
+
+  public class UpdateUserRolesForAdminRequest
+  {
+    public long userId { get; set; }
+    public List<UserRoleDetail> roles { get; set; }
+  }
+
+  public class UserRoleDetail
+  {
+    public long companyId { get; set; }
+    public List<string> roles { get; set; }
+  }
 }

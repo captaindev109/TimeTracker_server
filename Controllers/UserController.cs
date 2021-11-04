@@ -365,7 +365,7 @@ namespace TimeTracker_server.Controllers
         else
         {
           role.company = await _context.Companies.FindAsync(roleAcl.objectId);
-          role.roles = new List<string>(new string[] {roleAcl.role});
+          role.roles = new List<string>(new string[] { roleAcl.role });
           roleDetail.Add(role);
         }
       }
@@ -373,6 +373,37 @@ namespace TimeTracker_server.Controllers
       userRoles.roleDetail = roleDetail;
 
       return userRoles;
+    }
+
+    [HttpPost("{userId}/roles/update")]
+    public async Task<ActionResult<string>> UpdateUserRolesForAdmin(long userId, UpdateUserRolesForAdminRequest request)
+    {
+      List<UserRoleDetail> roleDetail = request.roles;
+      List<long> companyIds = roleDetail.Select(x => x.companyId).ToList();
+
+      var aclIds = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && companyIds.Contains(x.objectId) && x.objectType == "company").ToListAsync();
+      _context.UserAcls.RemoveRange(aclIds);
+      await _context.SaveChangesAsync();
+
+      foreach (var companyId in companyIds)
+      {
+        var roles = roleDetail.Find(x => x.companyId == companyId).roles;
+        foreach (var role in roles)
+        {
+          var newRoleAcl = new UserAcl();
+          newRoleAcl.sourceId = userId;
+          newRoleAcl.sourceType = "user";
+          newRoleAcl.role = role;
+          newRoleAcl.objectId = companyId;
+          newRoleAcl.objectType = "company";
+          newRoleAcl.create_timestamp = DateTime.UtcNow;
+          newRoleAcl.update_timestamp = DateTime.UtcNow;
+          _context.UserAcls.Add(newRoleAcl);
+        }
+      }
+      await _context.SaveChangesAsync();
+
+      return NoContent();
     }
 
     [HttpPost("update-roles")]
