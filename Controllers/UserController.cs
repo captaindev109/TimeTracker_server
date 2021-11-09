@@ -225,6 +225,7 @@ namespace TimeTracker_server.Controllers
         memberAcl.role = "active_member";
         memberAcl.objectId = long.Parse(companyId);
         memberAcl.objectType = "company";
+        memberAcl.companyId = long.Parse(companyId);
         memberAcl.create_timestamp = DateTime.UtcNow;
         memberAcl.update_timestamp = DateTime.UtcNow;
 
@@ -264,6 +265,7 @@ namespace TimeTracker_server.Controllers
         roleAcl.role = role;
         roleAcl.objectId = long.Parse(companyId);
         roleAcl.objectType = "company";
+        roleAcl.companyId = long.Parse(companyId);
         roleAcl.create_timestamp = DateTime.UtcNow;
         roleAcl.update_timestamp = DateTime.UtcNow;
 
@@ -396,6 +398,7 @@ namespace TimeTracker_server.Controllers
           newRoleAcl.role = role;
           newRoleAcl.objectId = companyId;
           newRoleAcl.objectType = "company";
+          newRoleAcl.companyId = companyId;
           newRoleAcl.create_timestamp = DateTime.UtcNow;
           newRoleAcl.update_timestamp = DateTime.UtcNow;
           _context.UserAcls.Add(newRoleAcl);
@@ -425,6 +428,7 @@ namespace TimeTracker_server.Controllers
         newRoleAcl.role = role;
         newRoleAcl.objectId = companyId;
         newRoleAcl.objectType = "company";
+        newRoleAcl.companyId = companyId;
         newRoleAcl.create_timestamp = DateTime.UtcNow;
         newRoleAcl.update_timestamp = DateTime.UtcNow;
         _context.UserAcls.Add(newRoleAcl);

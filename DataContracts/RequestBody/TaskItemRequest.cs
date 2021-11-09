@@ -9,6 +9,7 @@ namespace DataContracts.RequestBody
   {
     public TaskItem taskItem { get; set; }
     public long projectId { get; set; }
+    public long companyId { get; set; }
   }
 
   public class UpdateTaskItemRequest

@@ -18,5 +18,6 @@ namespace DataContracts.RequestBody
     public Team team { get; set; }
     public List<long> teamLeads { get; set; }
     public List<long> members { get; set; }
+    public long companyId { get; set; }
   }
 }

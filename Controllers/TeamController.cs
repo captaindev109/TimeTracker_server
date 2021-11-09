@@ -104,6 +104,7 @@ namespace TimeTracker_server.Controllers
       var team = request.team;
       var teamLeads = request.teamLeads;
       var members = request.members;
+      var companyId = request.companyId;
 
       if (id != team.id)
       {
@@ -124,6 +125,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "team_lead";
         newAcl.objectId = team.id;
         newAcl.objectType = "team";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -138,6 +140,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "worker";
         newAcl.objectId = team.id;
         newAcl.objectType = "team";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -186,6 +189,7 @@ namespace TimeTracker_server.Controllers
       userAcl.role = "created_in";
       userAcl.objectId = companyId;
       userAcl.objectType = "company";
+      userAcl.companyId = companyId;
       userAcl.create_timestamp = DateTime.UtcNow;
       userAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(userAcl);
@@ -198,6 +202,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "team_lead";
         newAcl.objectId = createdTeamId;
         newAcl.objectType = "team";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -212,6 +217,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "worker";
         newAcl.objectId = createdTeamId;
         newAcl.objectType = "team";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 

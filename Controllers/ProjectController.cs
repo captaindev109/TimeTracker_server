@@ -16,10 +16,11 @@ namespace TimeTracker_server.Controllers
   public class ProjectController : ControllerBase
   {
     private readonly MyDbContext _context;
-
+    private  CommonController commonController;
     public ProjectController(MyDbContext context)
     {
       _context = context;
+      commonController = new CommonController(_context);
     }
 
     // GET: api/Project
@@ -35,7 +36,8 @@ namespace TimeTracker_server.Controllers
     {
       var companyId = request.companyId;
       var userId = request.userId;
-      List<string> roles = getRoles(companyId, userId).Result;
+
+      List<string> roles = commonController.getRoles(companyId, userId).Result;
 
       var editableProjectIds = new List<long>();
 
@@ -157,6 +159,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "project_manager";
         newAcl.objectId = project.id;
         newAcl.objectType = "project";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -171,6 +174,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "project_assistant";
         newAcl.objectId = project.id;
         newAcl.objectType = "project";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -185,6 +189,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "assigned_in";
         newAcl.objectId = teamId;
         newAcl.objectType = "team";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -272,6 +277,7 @@ namespace TimeTracker_server.Controllers
       userAcl.role = "created_in";
       userAcl.objectId = companyId;
       userAcl.objectType = "company";
+      userAcl.companyId = companyId;
       userAcl.create_timestamp = DateTime.UtcNow;
       userAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(userAcl);
@@ -284,6 +290,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "project_manager";
         newAcl.objectId = createdProjectId;
         newAcl.objectType = "project";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -298,6 +305,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "project_assistant";
         newAcl.objectId = createdProjectId;
         newAcl.objectType = "project";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -312,6 +320,7 @@ namespace TimeTracker_server.Controllers
         newAcl.role = "assigned_in";
         newAcl.objectId = teamId;
         newAcl.objectType = "team";
+        newAcl.companyId = companyId;
         newAcl.create_timestamp = DateTime.UtcNow;
         newAcl.update_timestamp = DateTime.UtcNow;
 
@@ -387,13 +396,6 @@ namespace TimeTracker_server.Controllers
     private bool ProjectExists(long id)
     {
       return _context.Projects.Any(e => e.id == id);
-    }
-    
-    private async Task<List<string>> getRoles(long companyId, long userId)
-    {
-     var roleList = await _context.UserAcls.Where(x => x.sourceId == userId && x.sourceType == "user" && !x.role.Contains("member") && x.objectType == "company" && x.objectId == companyId).Select(x => x.role).Distinct().ToListAsync();
-
-      return roleList;
     }
   }
 }

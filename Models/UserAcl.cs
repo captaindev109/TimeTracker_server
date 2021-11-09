@@ -10,6 +10,7 @@ namespace TimeTracker_server.Models
     public string role { get; set; }
     public long objectId { get; set; }
     public string objectType { get; set; }
+    public long companyId { get; set; }
     public DateTime create_timestamp { get; set; }
     public DateTime update_timestamp { get; set; }
   }

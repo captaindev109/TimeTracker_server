@@ -88,6 +88,7 @@ namespace TimeTracker_server.Controllers
     public async Task<ActionResult<TaskItem>> PostTaskItem(CreateTaskItemRequest request)
     {
       var projectId = request.projectId;
+      var companyId = request.companyId;
 
       var taskItem = request.taskItem;
       taskItem.create_timestamp = DateTime.UtcNow;
@@ -103,6 +104,7 @@ namespace TimeTracker_server.Controllers
       userAcl.role = "created_in";
       userAcl.objectId = projectId;
       userAcl.objectType = "project";
+      userAcl.companyId = companyId;
       userAcl.create_timestamp = DateTime.UtcNow;
       userAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(userAcl);

@@ -172,6 +172,7 @@ namespace TimeTracker_server.Controllers
       taskTypeAcl.role = "created_in";
       taskTypeAcl.objectId = companyId;
       taskTypeAcl.objectType = "company";
+      taskTypeAcl.companyId = companyId;
       taskTypeAcl.create_timestamp = DateTime.UtcNow;
       taskTypeAcl.update_timestamp = DateTime.UtcNow;
       _context.UserAcls.Add(taskTypeAcl);
