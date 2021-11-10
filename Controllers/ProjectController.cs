@@ -16,7 +16,7 @@ namespace TimeTracker_server.Controllers
   public class ProjectController : ControllerBase
   {
     private readonly MyDbContext _context;
-    private  CommonController commonController;
+    private CommonController commonController;
     public ProjectController(MyDbContext context)
     {
       _context = context;
@@ -132,16 +132,14 @@ namespace TimeTracker_server.Controllers
       var teams = request.teams;
       var tags = request.tags;
 
-      if (id != project.id)
+      if (!ProjectExists(id))
       {
-        return BadRequest();
+        return NotFound();
       }
 
-      var tagsAcl = await _context.TagAcls.Where(x => x.objectId == id && x.objectType == "project").ToListAsync();
-      _context.TagAcls.RemoveRange(tagsAcl);
-      await _context.SaveChangesAsync();
-
       _context.Entry(project).State = EntityState.Modified;
+
+      // ---------user acl management---------
 
       var oldAcls = await _context.UserAcls.Where(x =>
       (x.sourceType == "user" && x.role == "project_manager" && x.objectId == project.id && x.objectType == "project")
@@ -149,105 +147,74 @@ namespace TimeTracker_server.Controllers
     || (x.sourceType == "project" && x.role == "assigned_in" && x.sourceId == project.id && x.objectType == "team")
       ).ToListAsync();
 
-      _context.UserAcls.RemoveRange(oldAcls);
+      var projectMangerOldAcls = oldAcls.Where(x => x.role == "project_manager").Select(x => x.sourceId).ToList();
+      var removedProjectManagers = projectMangerOldAcls.Except(projectManagers);
+      var removedProjectManagerAcls = oldAcls.Where(x => x.role == "project_manager" && removedProjectManagers.Contains(x.sourceId)).ToList();
+      _context.UserAcls.RemoveRange(removedProjectManagerAcls);
 
-      foreach (var userId in projectManagers)
+      var newProjectManagers = projectManagers.Except(projectMangerOldAcls);
+      foreach (var userId in newProjectManagers)
       {
-        var newAcl = new UserAcl();
-        newAcl.sourceId = userId;
-        newAcl.sourceType = "user";
-        newAcl.role = "project_manager";
-        newAcl.objectId = project.id;
-        newAcl.objectType = "project";
-        newAcl.companyId = companyId;
-        newAcl.create_timestamp = DateTime.UtcNow;
-        newAcl.update_timestamp = DateTime.UtcNow;
-
-        _context.UserAcls.Add(newAcl);
+        commonController.addUserAcl(userId, "user", "project_manager", project.id, "project", companyId);
       }
 
-      foreach (var userId in projectManagerAssistants)
-      {
-        var newAcl = new UserAcl();
-        newAcl.sourceId = userId;
-        newAcl.sourceType = "user";
-        newAcl.role = "project_assistant";
-        newAcl.objectId = project.id;
-        newAcl.objectType = "project";
-        newAcl.companyId = companyId;
-        newAcl.create_timestamp = DateTime.UtcNow;
-        newAcl.update_timestamp = DateTime.UtcNow;
+      var projectAssistantOldAcls = oldAcls.Where(x => x.role == "project_assistant").Select(x => x.sourceId).ToList();
+      var removedProjectAssistants = projectAssistantOldAcls.Except(projectManagerAssistants);
+      var removedProjectAssistantAcls = oldAcls.Where(x => x.role == "project_assistant" && removedProjectAssistants.Contains(x.sourceId)).ToList();
+      _context.UserAcls.RemoveRange(removedProjectAssistantAcls);
 
-        _context.UserAcls.Add(newAcl);
+      var newProjectAssistants = projectManagerAssistants.Except(projectAssistantOldAcls);
+
+      foreach (var userId in newProjectAssistants)
+      {
+        commonController.addUserAcl(userId, "user", "project_assistant", project.id, "project", companyId);
       }
 
-      foreach (var teamId in teams)
-      {
-        var newAcl = new UserAcl();
-        newAcl.sourceId = project.id;
-        newAcl.sourceType = "project";
-        newAcl.role = "assigned_in";
-        newAcl.objectId = teamId;
-        newAcl.objectType = "team";
-        newAcl.companyId = companyId;
-        newAcl.create_timestamp = DateTime.UtcNow;
-        newAcl.update_timestamp = DateTime.UtcNow;
+      var teamOldAcls = oldAcls.Where(x => x.role == "assigned_in").Select(x => x.objectId).ToList();
+      var removedTeams = teamOldAcls.Except(teams);
+      var removedTeamAcls = oldAcls.Where(x => x.role == "assigned_in" && removedTeams.Contains(x.objectId)).ToList();
+      _context.UserAcls.RemoveRange(removedTeamAcls);
 
-        _context.UserAcls.Add(newAcl);
+      var newTeams = teams.Except(teamOldAcls);
+
+      foreach (var teamId in newTeams)
+      {
+        commonController.addUserAcl(project.id, "project", "assigned_in", teamId, "team", companyId);
       }
+      await _context.SaveChangesAsync();
+
+
+      // ---------tag management---------
 
       var tagsOfCompany = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
+      var addedTagIds = tagsOfCompany.Where(x => tags.Contains(x.name)).Select(x => x.id).ToList();
+
+      var oldTagAcls = await _context.TagAcls.Where(x => x.objectId == id && x.objectType == "project").ToListAsync();
+      var oldTagIds = oldTagAcls.Select(x => x.tagId).ToList();
+      var removedTagIds = oldTagIds.Except(addedTagIds);
+
+      var removedOldTagAcls = oldTagAcls.Where(x => removedTagIds.Contains(x.tagId)).ToList();
+      _context.TagAcls.RemoveRange(removedOldTagAcls);
+
+      var newTagIds = addedTagIds.Except(oldTagIds);
+
+      foreach (var newTagId in newTagIds)
+      {
+        commonController.addTagAcl(newTagId, project.id, "project");
+      }
 
       foreach (var tagName in tags)
       {
         var existTag = tagsOfCompany.FirstOrDefault(x => x.name == tagName);
         if (existTag == null)
         {
-          var newTag = new Tag();
-          newTag.name = tagName;
-          newTag.companyId = companyId;
-          newTag.create_timestamp = DateTime.UtcNow;
-          newTag.update_timestamp = DateTime.UtcNow;
-          _context.Tags.Add(newTag);
+          var newTag = commonController.addTag(tagName, companyId);
           await _context.SaveChangesAsync();
-
           var createdTagId = newTag.id;
-
-          var tagAcl = new TagAcl();
-          tagAcl.tagId = createdTagId;
-          tagAcl.objectType = "project";
-          tagAcl.objectId = project.id;
-          tagAcl.create_timestamp = DateTime.UtcNow;
-          tagAcl.update_timestamp = DateTime.UtcNow;
-          _context.TagAcls.Add(tagAcl);
-        }
-        else
-        {
-          var tagAcl = new TagAcl();
-          tagAcl.tagId = existTag.id;
-          tagAcl.objectType = "project";
-          tagAcl.objectId = project.id;
-          tagAcl.create_timestamp = DateTime.UtcNow;
-          tagAcl.update_timestamp = DateTime.UtcNow;
-          _context.TagAcls.Add(tagAcl);
+          commonController.addTagAcl(createdTagId, project.id, "project");
         }
       }
-
-      try
-      {
-        await _context.SaveChangesAsync();
-      }
-      catch (DbUpdateConcurrencyException)
-      {
-        if (!ProjectExists(id))
-        {
-          return NotFound();
-        }
-        else
-        {
-          throw;
-        }
-      }
+      await _context.SaveChangesAsync();
 
       return NoContent();
     }
@@ -262,7 +229,8 @@ namespace TimeTracker_server.Controllers
       var projectManagerAssistants = request.projectManagerAssistants;
       var teams = request.teams;
       var tags = request.tags;
-
+      
+      //------project management ----
       var project = request.project;
       project.create_timestamp = DateTime.UtcNow;
       project.update_timestamp = DateTime.UtcNow;
@@ -271,62 +239,26 @@ namespace TimeTracker_server.Controllers
 
       var createdProjectId = project.id;
 
-      var userAcl = new UserAcl();
-      userAcl.sourceId = createdProjectId;
-      userAcl.sourceType = "project";
-      userAcl.role = "created_in";
-      userAcl.objectId = companyId;
-      userAcl.objectType = "company";
-      userAcl.companyId = companyId;
-      userAcl.create_timestamp = DateTime.UtcNow;
-      userAcl.update_timestamp = DateTime.UtcNow;
-      _context.UserAcls.Add(userAcl);
+      //------project usr acl management ----
+      commonController.addUserAcl(createdProjectId, "project", "created_in", companyId, "company", companyId);
 
       foreach (var userId in projectManagers)
       {
-        var newAcl = new UserAcl();
-        newAcl.sourceId = userId;
-        newAcl.sourceType = "user";
-        newAcl.role = "project_manager";
-        newAcl.objectId = createdProjectId;
-        newAcl.objectType = "project";
-        newAcl.companyId = companyId;
-        newAcl.create_timestamp = DateTime.UtcNow;
-        newAcl.update_timestamp = DateTime.UtcNow;
-
-        _context.UserAcls.Add(newAcl);
+        commonController.addUserAcl(userId, "user", "project_manager", createdProjectId, "project", companyId);
       }
 
       foreach (var userId in projectManagerAssistants)
       {
-        var newAcl = new UserAcl();
-        newAcl.sourceId = userId;
-        newAcl.sourceType = "user";
-        newAcl.role = "project_assistant";
-        newAcl.objectId = createdProjectId;
-        newAcl.objectType = "project";
-        newAcl.companyId = companyId;
-        newAcl.create_timestamp = DateTime.UtcNow;
-        newAcl.update_timestamp = DateTime.UtcNow;
-
-        _context.UserAcls.Add(newAcl);
+        commonController.addUserAcl(userId, "user", "project_assistant", createdProjectId, "project", companyId);
       }
 
       foreach (var teamId in teams)
       {
-        var newAcl = new UserAcl();
-        newAcl.sourceId = createdProjectId;
-        newAcl.sourceType = "project";
-        newAcl.role = "assigned_in";
-        newAcl.objectId = teamId;
-        newAcl.objectType = "team";
-        newAcl.companyId = companyId;
-        newAcl.create_timestamp = DateTime.UtcNow;
-        newAcl.update_timestamp = DateTime.UtcNow;
-
-        _context.UserAcls.Add(newAcl);
+        commonController.addUserAcl(createdProjectId, "project", "assigned_in", teamId, "team", companyId);
       }
+      await _context.SaveChangesAsync();
 
+      //-------- tag management-----------
       var tagsOfCompany = await _context.Tags.Where(x => x.companyId == companyId).ToListAsync();
 
       foreach (var tagName in tags)
@@ -334,37 +266,18 @@ namespace TimeTracker_server.Controllers
         var existTag = tagsOfCompany.FirstOrDefault(x => x.name == tagName);
         if (existTag == null)
         {
-          var newTag = new Tag();
-          newTag.name = tagName;
-          newTag.companyId = companyId;
-          newTag.create_timestamp = DateTime.UtcNow;
-          newTag.update_timestamp = DateTime.UtcNow;
-          _context.Tags.Add(newTag);
+          var newTag = commonController.addTag(tagName, companyId);
           await _context.SaveChangesAsync();
-
           var createdTagId = newTag.id;
-
-          var tagAcl = new TagAcl();
-          tagAcl.tagId = createdTagId;
-          tagAcl.objectType = "project";
-          tagAcl.objectId = createdProjectId;
-          tagAcl.create_timestamp = DateTime.UtcNow;
-          tagAcl.update_timestamp = DateTime.UtcNow;
-          _context.TagAcls.Add(tagAcl);
+          commonController.addTagAcl(createdTagId, createdProjectId, "project");
         }
         else
         {
-          var tagAcl = new TagAcl();
-          tagAcl.tagId = existTag.id;
-          tagAcl.objectType = "project";
-          tagAcl.objectId = createdProjectId;
-          tagAcl.create_timestamp = DateTime.UtcNow;
-          tagAcl.update_timestamp = DateTime.UtcNow;
-          _context.TagAcls.Add(tagAcl);
+          commonController.addTagAcl(existTag.id, createdProjectId, "project");
         }
       }
-
       await _context.SaveChangesAsync();
+
       return project;
     }
 
@@ -387,6 +300,9 @@ namespace TimeTracker_server.Controllers
      ).ToListAsync();
 
       _context.UserAcls.RemoveRange(oldAcls);
+
+      var oldTagAcls = await _context.TagAcls.Where(x => x.objectId == id && x.objectType == "project").ToListAsync();
+      _context.TagAcls.RemoveRange(oldTagAcls);
 
       await _context.SaveChangesAsync();
 
