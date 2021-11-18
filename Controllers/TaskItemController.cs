@@ -379,5 +379,15 @@ namespace TimeTracker_server.Controllers
 
       return roleList;
     }
+
+    // POST: api/TaskItem/addManualLog
+    [HttpPost("addManualLog")]
+    public async Task<ActionResult<TimeTable>> addManualLog(TimeTable timeTable)
+    {
+      _context.TimeTables.Add(timeTable);
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
   }
 }
