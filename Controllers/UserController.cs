@@ -187,7 +187,7 @@ namespace TimeTracker_server.Controllers
         using StreamReader sr = new StreamReader("EmailTemplates/InviteUser.html");
         string body = sr.ReadToEnd().Replace("{full_name}", "There!").Replace("{token}", token);
 
-        await EmailService.SendEmail(email, "Invitation Request", body);
+        // await EmailService.SendEmail(email, "Invitation Request", body);
       }
       catch (Exception ex)
       {
