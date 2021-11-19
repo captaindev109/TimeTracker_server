@@ -22,7 +22,7 @@ namespace TimeTracker_server.Services
         client.EnableSsl = true;
         client.Port = 587;
         client.Host = "host212.checkdomain.de";
-        client.Credentials = new NetworkCredential("robot@t22.tools", "?T6D2e#r0%p?mA4G");
+        client.Credentials = new NetworkCredential("robot@t22.tools", "3oi678W@i5QO%RJnx@$&");
 
         MailMessage mailMessage = new MailMessage();
         mailMessage.From = new MailAddress("robot@t22.tools", "FeldeIt TimeTracker");
