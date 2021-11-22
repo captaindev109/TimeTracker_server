@@ -382,9 +382,33 @@ namespace TimeTracker_server.Controllers
 
     // POST: api/TaskItem/addManualLog
     [HttpPost("addManualLog")]
-    public async Task<ActionResult<TimeTable>> addManualLog(TimeTable timeTable)
+    public async Task<ActionResult<TimeTable>> addManualLog(ManualLog request)
     {
-      _context.TimeTables.Add(timeTable);
+      List<DateTime> dates = request.dates;
+      long start = request.start;
+      long end = request.end;
+      string description = request.description;
+      long taskItemId = request.taskItemId;
+      long userId = request.userId;
+      long companyId = request.companyId;
+
+      foreach (var date in dates)
+      {
+        var timeTable = new TimeTable();
+        timeTable.date = date;
+        timeTable.start = start;
+        timeTable.end = end;
+        timeTable.taskItemId = taskItemId;
+        timeTable.userId = userId;
+        timeTable.description = description;
+        timeTable.companyId = companyId;
+        timeTable.status = "Active";
+        timeTable.pauseStart = -1;
+        timeTable.pauseDuration = 0;
+
+        _context.TimeTables.Add(timeTable);
+      }
+
       await _context.SaveChangesAsync();
 
       return NoContent();
