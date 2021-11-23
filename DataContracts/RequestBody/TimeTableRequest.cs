@@ -24,9 +24,20 @@ namespace DataContracts.RequestBody
     public List<DateTime> dates { get; set; }
     public long start { get; set; }
     public long end { get; set; }
+    public long pauseDuration { get; set; }
     public string description { get; set; }
     public long taskItemId { get; set; }
     public long userId { get; set; }
     public long companyId { get; set; }
+  }
+
+  public class UpdateLog
+  {
+    public long id { get; set; }
+    public DateTime date { get; set; }
+    public long start { get; set; }
+    public long end { get; set; }
+    public long pauseDuration { get; set; }
+    public string description { get; set; }
   }
 }

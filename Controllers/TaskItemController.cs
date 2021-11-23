@@ -387,6 +387,7 @@ namespace TimeTracker_server.Controllers
       List<DateTime> dates = request.dates;
       long start = request.start;
       long end = request.end;
+      long pauseDuration = request.pauseDuration;
       string description = request.description;
       long taskItemId = request.taskItemId;
       long userId = request.userId;
@@ -404,11 +405,41 @@ namespace TimeTracker_server.Controllers
         timeTable.companyId = companyId;
         timeTable.status = "Active";
         timeTable.pauseStart = -1;
-        timeTable.pauseDuration = 0;
+        timeTable.pauseDuration = pauseDuration;
 
         _context.TimeTables.Add(timeTable);
       }
 
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
+
+    // POST: api/TaskItem/updateLog
+    [HttpPost("updateLog")]
+    public async Task<ActionResult<TimeTable>> updateLog(UpdateLog request)
+    {
+      long timeTableId = request.id;
+      DateTime date = request.date;
+      long start = request.start;
+      long end = request.end;
+      long pauseDuration = request.pauseDuration;
+      string description = request.description;
+
+      var timeTable = await _context.TimeTables.FindAsync(timeTableId);
+
+      if (timeTable == null)
+      {
+        return NotFound();
+      }
+
+      timeTable.date = date;
+      timeTable.start = start;
+      timeTable.end = end;
+      timeTable.description = description;
+      timeTable.pauseDuration = pauseDuration;
+
+      _context.Entry(timeTable).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
       return NoContent();
