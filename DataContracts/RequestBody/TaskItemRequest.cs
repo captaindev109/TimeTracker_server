@@ -12,6 +12,12 @@ namespace DataContracts.RequestBody
     public long companyId { get; set; }
   }
 
+  public class CommonRequest
+  {
+    public long userId { get; set; }
+    public long companyId { get; set; }
+  }
+
   public class UpdateTaskItemRequest
   {
     public TaskItem taskItem { get; set; }

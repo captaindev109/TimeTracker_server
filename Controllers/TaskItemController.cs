@@ -444,5 +444,18 @@ namespace TimeTracker_server.Controllers
 
       return NoContent();
     }
+  
+    // POST: api/TaskItem/getLog
+    [HttpPost("getLog")]
+    public async Task<ActionResult<IEnumerable<TimeTable>>> getTaskItemTrackedLog(CommonRequest request)
+    {
+      var userId = request.userId;
+      var companyId = request.companyId;
+
+      var timeTables = await _context.TimeTables.Where(x => x.userId == userId && x.companyId == companyId && x.status != "Progress").ToListAsync();
+
+      return timeTables;
+    }
+
   }
 }
