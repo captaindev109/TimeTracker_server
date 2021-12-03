@@ -189,9 +189,9 @@ namespace TimeTracker_server.Controllers
 
         await EmailService.SendEmail(email, "Invitation Request", body);
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
       return NoContent();
     }
@@ -285,9 +285,9 @@ namespace TimeTracker_server.Controllers
         }
 
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
       return NoContent();
     }

@@ -183,9 +183,9 @@ namespace TimeTracker_server.Controllers
       {
         await SendCompanyJoinRequest(userName, "will", ownerEmail);
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
       return null;
     }
@@ -215,9 +215,9 @@ namespace TimeTracker_server.Controllers
         await client.SendMailAsync(mailMessage);
 
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
     }
   }

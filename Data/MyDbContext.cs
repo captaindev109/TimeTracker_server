@@ -19,5 +19,15 @@ namespace TimeTracker_server.Data
     public DbSet<Tag> Tags { get; set; }
     public DbSet<TagAcl> TagAcls { get; set; }
     public DbSet<TaskItemAcl> TaskItemAcls { get; set; }
+    public DbSet<KpiTimeLog> kpi_timelog { get; set; }
+
+     protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<KpiTimeLog>(e =>
+        {
+            e.HasNoKey();
+            e.ToView("kpi_timelog");
+        });
+    }
   }
 }

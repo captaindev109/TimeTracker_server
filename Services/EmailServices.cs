@@ -33,9 +33,9 @@ namespace TimeTracker_server.Services
         await client.SendMailAsync(mailMessage);
 
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
     }
   }

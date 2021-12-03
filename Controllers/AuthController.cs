@@ -189,9 +189,9 @@ namespace TimeTracker_server.Controllers
         string body = sr.ReadToEnd().Replace("{full_name}", user.firstName + user.lastName).Replace("{token}", token);
         await EmailService.SendEmail(email, "Forgot Password Request", body);
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
       return user;
     }
@@ -226,9 +226,9 @@ namespace TimeTracker_server.Controllers
         }
 
       }
-      catch (Exception ex)
+      catch
       {
-        throw ex;
+        throw;
       }
       return NoContent();
     }

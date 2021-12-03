@@ -168,5 +168,14 @@ namespace TimeTracker_server.Controllers
       int week = cal.GetWeekOfYear(dateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
       return week;
     }
+
+    // GET: api/TimeTable/kpi
+    [HttpGet("kpi")]
+    public async Task<ActionResult<KpiTimeLog>> getKpi()
+    {
+      var res = await _context.kpi_timelog.Where(x => x.objectId == 2).FirstOrDefaultAsync();
+
+      return res;
+    }
   }
 }

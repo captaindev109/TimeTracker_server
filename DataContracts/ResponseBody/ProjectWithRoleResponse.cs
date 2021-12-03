@@ -13,5 +13,12 @@ namespace DataContracts.RequestBody
     public List<User> projectManagerAssistants { get; set; }
     public List<Team> teams { get; set; }
     public List<Tag> tags { get; set; }
+    public Kpi kpis { get; set; }
+  }
+
+  public class Kpi
+  {
+    public long totalTime { get; set; }
+    public long currentMonthTime { get; set; }
   }
 }

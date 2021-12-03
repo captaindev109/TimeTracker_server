@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker_server.Models;
 using TimeTracker_server.Data;
+using TimeTracker_server.Repositories;
 using DataContracts.RequestBody;
 
 namespace TimeTracker_server.Controllers
@@ -16,11 +17,11 @@ namespace TimeTracker_server.Controllers
   public class ProjectController : ControllerBase
   {
     private readonly MyDbContext _context;
-    private CommonController commonController;
+    private CommonRepository commonRepository;
     public ProjectController(MyDbContext context)
     {
       _context = context;
-      commonController = new CommonController(_context);
+      commonRepository = new CommonRepository(_context);
     }
 
     // GET: api/Project
@@ -37,7 +38,7 @@ namespace TimeTracker_server.Controllers
       var companyId = request.companyId;
       var userId = request.userId;
 
-      List<string> roles = commonController.getRoles(companyId, userId).Result;
+      List<string> roles = commonRepository.getRoles(companyId, userId).Result;
 
       var editableProjectIds = new List<long>();
 
@@ -99,6 +100,10 @@ namespace TimeTracker_server.Controllers
         var tags = await _context.Tags.Where(x => tagIds.Contains(x.id)).ToListAsync();
         projectItem.tags = tags;
 
+        var kpis = await commonRepository.getKpi(item.id, "project", companyId, userId);
+
+        projectItem.kpis = kpis;
+
         resProjects.Add(projectItem);
       }
 
@@ -155,7 +160,7 @@ namespace TimeTracker_server.Controllers
       var newProjectManagers = projectManagers.Except(projectMangerOldAcls);
       foreach (var userId in newProjectManagers)
       {
-        commonController.addUserAcl(userId, "user", "project_manager", project.id, "project", companyId);
+        commonRepository.addUserAcl(userId, "user", "project_manager", project.id, "project", companyId);
       }
 
       var projectAssistantOldAcls = oldAcls.Where(x => x.role == "project_assistant").Select(x => x.sourceId).ToList();
@@ -167,7 +172,7 @@ namespace TimeTracker_server.Controllers
 
       foreach (var userId in newProjectAssistants)
       {
-        commonController.addUserAcl(userId, "user", "project_assistant", project.id, "project", companyId);
+        commonRepository.addUserAcl(userId, "user", "project_assistant", project.id, "project", companyId);
       }
 
       var teamOldAcls = oldAcls.Where(x => x.role == "assigned_in").Select(x => x.objectId).ToList();
@@ -179,7 +184,7 @@ namespace TimeTracker_server.Controllers
 
       foreach (var teamId in newTeams)
       {
-        commonController.addUserAcl(project.id, "project", "assigned_in", teamId, "team", companyId);
+        commonRepository.addUserAcl(project.id, "project", "assigned_in", teamId, "team", companyId);
       }
       await _context.SaveChangesAsync();
 
@@ -200,7 +205,7 @@ namespace TimeTracker_server.Controllers
 
       foreach (var newTagId in newTagIds)
       {
-        commonController.addTagAcl(newTagId, project.id, "project");
+        commonRepository.addTagAcl(newTagId, project.id, "project");
       }
 
       foreach (var tagName in tags)
@@ -208,10 +213,10 @@ namespace TimeTracker_server.Controllers
         var existTag = tagsOfCompany.FirstOrDefault(x => x.name == tagName);
         if (existTag == null)
         {
-          var newTag = commonController.addTag(tagName, companyId);
+          var newTag = commonRepository.addTag(tagName, companyId);
           await _context.SaveChangesAsync();
           var createdTagId = newTag.id;
-          commonController.addTagAcl(createdTagId, project.id, "project");
+          commonRepository.addTagAcl(createdTagId, project.id, "project");
         }
       }
       await _context.SaveChangesAsync();
@@ -240,21 +245,21 @@ namespace TimeTracker_server.Controllers
       var createdProjectId = project.id;
 
       //------project usr acl management ----
-      commonController.addUserAcl(createdProjectId, "project", "created_in", companyId, "company", companyId);
+      commonRepository.addUserAcl(createdProjectId, "project", "created_in", companyId, "company", companyId);
 
       foreach (var userId in projectManagers)
       {
-        commonController.addUserAcl(userId, "user", "project_manager", createdProjectId, "project", companyId);
+        commonRepository.addUserAcl(userId, "user", "project_manager", createdProjectId, "project", companyId);
       }
 
       foreach (var userId in projectManagerAssistants)
       {
-        commonController.addUserAcl(userId, "user", "project_assistant", createdProjectId, "project", companyId);
+        commonRepository.addUserAcl(userId, "user", "project_assistant", createdProjectId, "project", companyId);
       }
 
       foreach (var teamId in teams)
       {
-        commonController.addUserAcl(createdProjectId, "project", "assigned_in", teamId, "team", companyId);
+        commonRepository.addUserAcl(createdProjectId, "project", "assigned_in", teamId, "team", companyId);
       }
       await _context.SaveChangesAsync();
 
@@ -266,14 +271,14 @@ namespace TimeTracker_server.Controllers
         var existTag = tagsOfCompany.FirstOrDefault(x => x.name == tagName);
         if (existTag == null)
         {
-          var newTag = commonController.addTag(tagName, companyId);
+          var newTag = commonRepository.addTag(tagName, companyId);
           await _context.SaveChangesAsync();
           var createdTagId = newTag.id;
-          commonController.addTagAcl(createdTagId, createdProjectId, "project");
+          commonRepository.addTagAcl(createdTagId, createdProjectId, "project");
         }
         else
         {
-          commonController.addTagAcl(existTag.id, createdProjectId, "project");
+          commonRepository.addTagAcl(existTag.id, createdProjectId, "project");
         }
       }
       await _context.SaveChangesAsync();

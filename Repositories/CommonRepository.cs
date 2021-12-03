@@ -18,15 +18,13 @@ using TimeTracker_server.Models;
 using TimeTracker_server.Data;
 using TimeTracker_server.Services;
 
-namespace TimeTracker_server.Controllers
+namespace TimeTracker_server.Repositories
 {
-  [Route("[controller]")]
-  [ApiController]
-  public class CommonController : ControllerBase
+  public class CommonRepository
   {
     private readonly MyDbContext _context;
 
-    public CommonController(MyDbContext context)
+    public CommonRepository(MyDbContext context)
     {
       _context = context;
     }
@@ -83,6 +81,17 @@ namespace TimeTracker_server.Controllers
       _context.Tags.Add(newTag);
 
       return newTag;
+    }
+
+    public async Task<Kpi> getKpi(long objectId, string objectType, long companyId, long userId)
+    {
+      var res = await _context.kpi_timelog.Where(x => x.objectId == objectId && x.objectType == objectType && x.companyId == companyId && x.userId == userId).FirstOrDefaultAsync();
+      var kpi = new Kpi();
+      kpi.totalTime = res != null ? res.value_time_total : 0;
+      kpi.currentMonthTime = res != null ? res.value_time_current_month : 0;
+
+      return kpi;
+
     }
   }
 }
