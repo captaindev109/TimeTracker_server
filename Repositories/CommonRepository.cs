@@ -83,15 +83,10 @@ namespace TimeTracker_server.Repositories
       return newTag;
     }
 
-    public async Task<Kpi> getKpi(long objectId, string objectType, long companyId, long userId)
+    public async Task<long> getKpi(long objectId, string objectType, long companyId, long userId, string kpiName)
     {
-      var res = await _context.kpi_timelog.Where(x => x.objectId == objectId && x.objectType == objectType && x.companyId == companyId && x.userId == userId).FirstOrDefaultAsync();
-      var kpi = new Kpi();
-      kpi.totalTime = res != null ? res.value_time_total : 0;
-      kpi.currentMonthTime = res != null ? res.value_time_current_month : 0;
-
-      return kpi;
-
+      var res = await _context.kpi_timelog.FromSqlRaw($"SELECT {kpiName} as value FROM public.kpi_timelog WHERE {"objectId"} = {objectId} AND {"companyId"} = {companyId} AND {"userId"} = {userId}").Select(x => x.value).FirstOrDefaultAsync();
+      return res;
     }
   }
 }

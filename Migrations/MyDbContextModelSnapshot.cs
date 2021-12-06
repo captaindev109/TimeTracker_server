@@ -418,11 +418,6 @@ namespace TimeTracker_server.Migrations
                     b.ToTable("UserAcls");
                 });
 
-            // modelBuilder.Entity("TimeTracker_server.Models.KpiTimeLog", e =>
-            //     {
-            //         e.HasNoKey();
-            //         e.ToView("kpi_timelog");
-            //     });
 #pragma warning restore 612, 618
         }
     }

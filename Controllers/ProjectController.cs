@@ -100,8 +100,9 @@ namespace TimeTracker_server.Controllers
         var tags = await _context.Tags.Where(x => tagIds.Contains(x.id)).ToListAsync();
         projectItem.tags = tags;
 
-        var kpis = await commonRepository.getKpi(item.id, "project", companyId, userId);
-
+        var kpis = new Kpi();
+        kpis.totalTime = commonRepository.getKpi(item.id, "project", companyId, userId, "value_time_total").Result;
+        kpis.currentMonthTime = commonRepository.getKpi(item.id, "project", companyId, userId, "value_time_current_month").Result;
         projectItem.kpis = kpis;
 
         resProjects.Add(projectItem);
